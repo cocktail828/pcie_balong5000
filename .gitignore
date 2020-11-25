@@ -1,4 +1,10 @@
 *.sh
 *.o
 *.ko
-*.cmd.c
+*.mod.c
+.wan*
+.pcie*
+.tmp*
+module*
+Module*
+.hisi*
