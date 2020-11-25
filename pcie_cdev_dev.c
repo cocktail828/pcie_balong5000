@@ -61,6 +61,15 @@
 #include <linux/tty.h>
 #include <linux/pci.h>
 #include <linux/io.h>
+#include <linux/poll.h>
+#include <linux/bitops.h>
+#include <linux/errno.h>
+#include <linux/ioctl.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/mutex.h>
+#include <linux/types.h>
+
 #include "securec.h"
 #include "bsp_pcdev.h"
 #include "mdrv_om_common.h"
@@ -71,6 +80,7 @@
 #include "pcie_cdev_desc.h"
 #include "pcie_cdev_dbg.h"
 #include "pcie_cdev_portinfo.h"
+#include "pcie_balong_dev.h"
 
 #define PCIE_CDEV_PREFIX "pcdev_"
 #define PCIE_CDEV_DRV_NAME "pcie_cdev"
@@ -84,8 +94,6 @@ struct pcie_cdev_port_manager g_pcie_cdev_ports[PCIE_CDEV_COUNT];
 struct pcie_cdev_dump_s *g_pcdev_dump;
 
 static struct pcie_cdev_driver *g_cdev_driver;
-static unsigned int g_stat_drv_invalid = 0;
-static unsigned int g_stat_port_num_err = 0;
 static unsigned int g_stat_port_err = 0;
 static struct pcie_cdev_evt_manage g_pcdev_write_evt_manage;
 static struct pcie_cdev_evt_manage g_pcdev_read_evt_manage;
@@ -99,10 +107,11 @@ static struct pcie_cdev_evt_manage g_pcdev_rel_ind_send_evt_manage;
 static struct pcie_cdev_evt_manage g_pcdev_msc_stru_send_evt_manage;
 
 static struct delayed_work g_pcdev_access_work;
-static struct delayed_work g_pcdev_init_work;
 static struct task_struct *g_pcdev_enumdone_check = NULL;
 struct class *g_pcdev_class;
 
+int pcie_cdev_get_read_buf(struct pcie_cdev_port *port, pcdev_wr_async_info_s *wr_info);
+int pcie_cdev_ret_read_buf(struct pcie_cdev_port *port, pcdev_wr_async_info_s *wr_info);
 static void pcie_cdev_notify_cb(struct pcie_cdev_port *port);
 static void pcie_cdev_read_sig_cb(struct pcie_cdev_port *port);
 static void pcie_cdev_rel_ind_cb(struct pcie_cdev_port *port);
@@ -127,10 +136,14 @@ int kick_dma_transfer_read(void);
 static void pcdev_dma_send_irq(struct pcie_cdev_port *port);
 static void pcdev_dma_send_cmp_irq(struct pcie_cdev_port *port);
 
+long pcie_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+ssize_t pcie_cdev_read(struct file *file, char __user *buf, size_t count, loff_t *ppos);
+ssize_t pcie_cdev_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos);
+
 void pcie_cdev_dma_read_process(struct pcie_cdev_port *port);
 #endif
 
-#if 0 
+#if 0
 struct pcie_cdev_name_type_tbl g_pcie_cdev_type_table[PCIE_CDEV_COUNT] = {
     /* name             type(prot id)   user_space_check */
     { "pcdev_ttyGS0",   IF_PROTOCOL_PCUI,       PCUI_RC_BUFSIZE, PCUI_EP_BUFSIZE, 32, 1, 1 },
@@ -221,11 +234,13 @@ static int pcie_cdev_vote(int mode, unsigned int port_num)
     g_pcdev_ctx.get_curtime(&curtime);
     vote_dbg->vote_lasttime = curtime;
     vote_dbg->vote_lastmode = mode;
-    /*if (g_pcdev_ctx.pcdev_vote_lock(mode)) {
-        //PCDEV_ERR("vote fail\n");
-        vote_dbg->vote_fail_port++;
-        return -ENOTBLK;
-    }*/
+
+    // if (g_pcdev_ctx.pcdev_vote_lock(mode))
+    // {
+    //     // PCDEV_ERR("vote fail\n");
+    //     vote_dbg->vote_fail_port++;
+    //     return -ENOTBLK;
+    // }
 
     return 0;
 }
@@ -234,41 +249,42 @@ static void pcie_cdev_unvote(int mode, unsigned int port_num)
 {
     u64 curtime;
     struct pcdev_vote_dbg_s *vote_dbg = &g_pcdev_ctx.vote_dbg[port_num];
+
     vote_dbg->unvote_port++;
     g_pcdev_ctx.get_curtime(&curtime);
     vote_dbg->unvote_lasttime = curtime;
     vote_dbg->unvote_lastmode = mode;
-    //(void)g_pcdev_ctx.pcdev_vote_unlock(mode);
+    // (void)g_pcdev_ctx.pcdev_vote_unlock(mode);
 }
 
 static inline int pcie_cdev_linkdown(void)
 {
-    unsigned int allocked;
-
-    allocked = readl(&g_pcdev_ctx.ports_desc->allocked);
-    return allocked != PCIE_CDEV_ALLOCED;
+    int ret = readl(&g_pcdev_ctx.ports_desc->allocked) != PCIE_CDEV_ALLOCED;
+    if (ret)
+        PCDEV_ERR("ep ports not allocked\n");
+    return ret;
 }
 
 static inline void pcie_cdev_evt_init(struct pcie_cdev_evt_manage *evt, char *name)
 {
-    int ret;
     spin_lock_init(&evt->evt_lock);
     evt->port_evt_pos = 0;
     evt->name = name;
-    ret = memset_s(evt->port_evt_array, sizeof(evt->port_evt_array), 0, PCIE_CDEV_COUNT * sizeof(void *));
-    if (ret)
-    {
-        PCDEV_ERR("memset_s failed, line: %d \n", __LINE__);
-    }
+    memset_s(evt->port_evt_array, sizeof(evt->port_evt_array), 0, PCIE_CDEV_COUNT * sizeof(void *));
 }
 
-static int fs_user_space_check(int port_num)
+static int fs_user_space_check(int portnum)
 {
-    if (g_pcie_cdev_type_table[port_num].user_space_check)
+    if (g_pcie_cdev_type_table[portnum].user_space_check)
     {
+#if !defined(__x86_64__) && !defined(__INTEL__)
         if (get_fs() != KERNEL_DS)
+#else
+        mm_segment_t old_fs = get_fs();
+        if (old_fs.seg != KERNEL_DS.seg)
+#endif
         {
-            PCDEV_ERR("can't support in usr space\n");
+            PCDEV_ERR("operation not support in usr space\n");
             return -ENOTSUPP;
         }
     }
@@ -288,7 +304,6 @@ static void pcdev_tx_process(struct pcie_cdev_port *port)
 static void pcdev_rx_process(struct pcie_cdev_port *port)
 {
     PCDEV_TRACE("in\n");
-    PCDEV_INFO(port->port_num, "in\n");
 
     pcie_cdev_evt_push(port, &g_pcdev_read_evt_manage);
     queue_delayed_work(g_cdev_driver->pcdev_work_queue, &g_pcdev_access_work, 0);
@@ -390,11 +405,14 @@ static void pcie_cdev_rw_push(struct work_struct *work)
         pcdev_modem_msc_write_cb(port);
     }
 
+    PCDEV_LINE;
     /* read callback */
     while (NULL != (port = pcie_cdev_evt_get(&g_pcdev_read_evt_manage)))
     {
         pcie_cdev_read_cb(port);
     }
+
+    PCDEV_LINE;
     g_pcdev_ctx.vote_flag = 0xffff;
     /* write callback */
     while (NULL != (port = pcie_cdev_evt_get(&g_pcdev_write_evt_manage)))
@@ -402,88 +420,15 @@ static void pcie_cdev_rw_push(struct work_struct *work)
         pcie_cdev_write_cb(port);
     }
 
+    PCDEV_LINE;
     /* other callback ... */
-
     return;
 }
 
 #ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-static int pcie_cdev_dma_read_complete(u32 direction, u32 status, void *dev_info)
-{
-    unsigned long flags;
-    unsigned long dma_flags;
-    struct pcie_cdev_dma_list *list = NULL;
-    struct pcie_cdev_port *port = (struct pcie_cdev_port *)dev_info;
-    unsigned int s_tx_rp_dma_cmp_rc;
-    unsigned int need_kick = 0;
-
-    PCDEV_TRACE("in\n");
-    g_pcdev_ctx.dma_ctx.dma_trans_cmp_rc++;
-
-    if (g_pcdev_ctx.work_mode != pcie_ep)
-    {
-        PCDEV_ERR("dma send cmp mode err! \n");
-        return -1;
-    }
-
-    spin_lock_irqsave(&port->port_lock, flags);
-    if (status)
-    {
-        PCDEV_ERR("dma read fail\n");
-        port->pstats.rx_packets_fail++;
-        if (kick_dma_transfer_read())
-        {
-            PCDEV_ERR("kick_dma_transfer_read fail\n");
-        }
-        goto out;
-    }
-
-    if (!port->pstats.openclose)
-    {
-        port->pstats.local_close++;
-        goto out;
-    }
-
-    s_tx_rp_dma_cmp_rc = readl(port->tx_rp_dma_cmp_rc);
-    PCDEV_INFO(port->port_num, "buf(%d)\n", s_tx_rp_dma_cmp_rc);
-    s_tx_rp_dma_cmp_rc++;
-    writel(s_tx_rp_dma_cmp_rc, port->tx_rp_dma_cmp_rc);
-    s_tx_rp_dma_cmp_rc = readl(port->tx_rp_dma_cmp_rc);
-
-    spin_lock_irqsave(&g_pcdev_ctx.dma_ctx.dma_lock_rc, dma_flags);
-    list = list_last_entry(&g_pcdev_ctx.dma_ctx.head_rc, struct pcie_cdev_dma_list, list);
-    list_del(&list->list);
-
-    if (!list_empty(&g_pcdev_ctx.dma_ctx.head_rc))
-    {
-        need_kick = 1;
-    }
-    spin_unlock_irqrestore(&g_pcdev_ctx.dma_ctx.dma_lock_rc, dma_flags);
-
-    if (need_kick)
-    {
-        kick_dma_transfer_read();
-    }
-
-    writel(1, port->pcie_cdev_send_irq[dma_send_cmp]);
-    (void)readl(port->pcie_cdev_send_irq[dma_send_cmp]);
-
-    g_pcdev_ctx.send_irq();
-out:
-    spin_unlock_irqrestore(&port->port_lock, flags);
-    return 0;
-}
-
 static void pcdev_dma_send_irq(struct pcie_cdev_port *port)
 {
-    if (g_pcdev_ctx.work_mode != pcie_ep)
-    {
-        PCDEV_ERR("dma send mode err! \n");
-        return;
-    }
-
-    pcie_cdev_dma_read_process(port);
-
+    PCDEV_TRACE("dma send mode err! \n");
     return;
 }
 
@@ -493,13 +438,6 @@ void pcdev_dma_send_cmp_irq(struct pcie_cdev_port *port)
     unsigned int tx_rp_dma_cmp_rc;
 
     PCDEV_TRACE("in\n");
-
-    if (g_pcdev_ctx.work_mode != pcie_rc)
-    {
-        PCDEV_ERR("dma send cmp mode err! \n");
-        return;
-    }
-
     spin_lock_irqsave(&port->port_lock, flags);
 
     if (port->pstats.openclose == false)
@@ -511,7 +449,6 @@ void pcdev_dma_send_cmp_irq(struct pcie_cdev_port *port)
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         spin_unlock_irqrestore(&port->port_lock, flags);
         return;
     }
@@ -553,9 +490,7 @@ static irqreturn_t pcie_cdev_irq_handler(void)
         }
 
         if (port->pstats.openclose == false)
-        {
             continue;
-        }
 
         for (j = 0; j < IRQ_NUM; j++)
         {
@@ -574,25 +509,14 @@ static irqreturn_t pcie_cdev_irq_handler(void)
     return IRQ_HANDLED;
 }
 
-static inline int pcie_cdev_get_port_num(struct inode *inode)
+static inline int pcie_cdev_get_port_num_by_inode(struct inode *inode)
 {
-    int port_num;
+    return iminor(inode);
+}
 
-    if (!g_cdev_driver || !inode)
-    {
-        g_stat_drv_invalid++;
-        return -ENXIO;
-    }
-
-    port_num = inode->i_rdev - g_cdev_driver->dev_no;
-
-    if (port_num >= PCIE_CDEV_COUNT)
-    {
-        g_stat_port_num_err++;
-        return -ENXIO;
-    }
-
-    return port_num;
+static inline int pcie_cdev_get_port_num_by_file(struct file *file)
+{
+    return iminor(file->f_path.dentry->d_inode);
 }
 
 void pcie_cdev_notify_cb(struct pcie_cdev_port *port)
@@ -634,8 +558,8 @@ void pcie_cdev_read_sig_cb(struct pcie_cdev_port *port)
 {
     unsigned long flags;
     pcdev_mdm_msc_stru *read_sig = NULL;
-    PCDEV_TRACE("in\n");
 
+    PCDEV_TRACE("in\n");
     if (!port->read_sig_cb)
     {
         port->pstats.read_sig_cb_null++;
@@ -671,8 +595,8 @@ void pcie_cdev_rel_ind_cb(struct pcie_cdev_port *port)
 {
     unsigned long flags;
     unsigned int rel_ind;
-    PCDEV_TRACE("in\n");
 
+    PCDEV_TRACE("in\n");
     if (!port->rel_ind_cb)
     {
         port->pstats.rel_ind_cb_null++;
@@ -749,7 +673,6 @@ static void pcie_cdev_ret_buf(struct pcie_cdev_port *port, pcdev_wr_async_info_s
     int ret;
 
     PCDEV_TRACE("in\n");
-
     entry = *port->rx_wp % port->rx_num;
     desc = port->rx_desc + entry;
     if (desc == NULL)
@@ -765,7 +688,7 @@ static void pcie_cdev_ret_buf(struct pcie_cdev_port *port, pcdev_wr_async_info_s
     }
 
     desc->data_size = wr_info->size;
-    PCDEV_INFO(port->port_num, "buf(%d)\n", *port->rx_wp);
+    PCDEV_INFO("buf(%d)\n", *port->rx_wp);
     if (port->set_readbuf)
     {
         d_pbuf = (dma_addr_t)wr_info->p_paddr;
@@ -817,7 +740,6 @@ void pcie_cdev_read_cb(struct pcie_cdev_port *port)
     struct pcdev_desc *desc = NULL;
 
     PCDEV_TRACE("in, port num:%d\n", port->port_num);
-
     if (pcie_cdev_vote(read_cb_mode, port->port_num))
     {
         return;
@@ -833,7 +755,6 @@ void pcie_cdev_read_cb(struct pcie_cdev_port *port)
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         goto out;
     }
 
@@ -852,7 +773,6 @@ void pcie_cdev_read_cb(struct pcie_cdev_port *port)
     s_rx_rp = *port->rx_rp;
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         goto out;
     }
 
@@ -867,7 +787,7 @@ void pcie_cdev_read_cb(struct pcie_cdev_port *port)
         ret = g_pcdev_ctx.pcie_first_user(PCIE_EP_MSI_CHAR_DEV);
         if (ret)
         {
-            printk(KERN_ERR "[C SR][pcdev]:port_name:%s\n", g_pcie_cdev_type_table[port->port_num].name);
+            PCDEV_INFO("[C SR][pcdev]:port_name:%s\n", g_pcie_cdev_type_table[port->port_num].name);
         }
         else
         {
@@ -879,17 +799,17 @@ void pcie_cdev_read_cb(struct pcie_cdev_port *port)
     {
         if (!port->read_done_cb)
         {
-            PCDEV_ERR("read_done_cb NULL\n");
+            PCDEV_INFO("read_done_cb is NULL\n");
             port->pstats.read_cb_null++;
             goto out;
         }
 
-        PCDEV_INFO(port->port_num, "read_done_cb(%d)\n", port->rx_rp_process);
+        PCDEV_INFO("read_done_cb(%d)\n", port->rx_rp_process);
         port->rx_rp_process++;
         port->pstats.read_cb_call++;
         spin_unlock_irqrestore(&port->port_lock, flags);
         pcie_cdev_unvote(read_cb_mode, port->port_num);
-        port->read_done_cb();
+        port->read_done_cb(port);
         if (pcie_cdev_vote(read_cb_mode, port->port_num))
         {
             return;
@@ -901,6 +821,7 @@ void pcie_cdev_read_cb(struct pcie_cdev_port *port)
             goto out;
         }
     } while (port->rx_rp_process != s_rx_rp);
+    PCDEV_LINE;
 
     if (g_pcdev_dump)
     {
@@ -943,7 +864,6 @@ void pcie_cdev_write_cb(struct pcie_cdev_port *port)
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         goto out;
     }
 
@@ -993,7 +913,7 @@ void pcie_cdev_write_cb(struct pcie_cdev_port *port)
             {
                 spin_unlock_irqrestore(&port->port_lock, flags);
                 pcie_cdev_unvote(write_cb_mode, port->port_num);
-                PCDEV_INFO(port->port_num, "buf(%d)\n", port->tx_rp_complete);
+                PCDEV_INFO("buf(%d)\n", port->tx_rp_complete);
                 port->write_done_cb(pVirAddr, (char *)s_pbuf, u32Size);
                 if (pcie_cdev_vote(write_cb_mode, port->port_num))
                 {
@@ -1011,7 +931,7 @@ void pcie_cdev_write_cb(struct pcie_cdev_port *port)
             {
                 spin_unlock_irqrestore(&port->port_lock, flags);
                 pcie_cdev_unvote(write_cb_mode, port->port_num);
-                PCDEV_INFO(port->port_num, "buf(%d)\n", port->tx_rp_complete);
+                PCDEV_INFO("buf(%d)\n", port->tx_rp_complete);
                 rw_info.p_vaddr = pVirAddr;
                 rw_info.p_paddr = (char *)s_pbuf;
                 rw_info.size = u32Size;
@@ -1126,11 +1046,10 @@ void pcie_cdev_dma_read_process(struct pcie_cdev_port *port)
     unsigned int is_empty = 0;
 
     PCDEV_TRACE("in\n");
-
     spin_lock_irqsave(&port->port_lock, flags);
     while (port->tx_rp_dma_cfg_rc != *port->tx_rp_todo_rc)
     {
-        PCDEV_INFO(port->port_num, "buf(%d)\n", port->tx_rp_dma_cfg_rc);
+        PCDEV_INFO("buf(%d)\n", port->tx_rp_dma_cfg_rc);
         entry = port->tx_rp_dma_cfg_rc % port->tx_num;
         desc = port->rx_desc + entry;
 
@@ -1143,14 +1062,7 @@ void pcie_cdev_dma_read_process(struct pcie_cdev_port *port)
         port->tx_rp_dma_cfg_rc++;
 
         spin_lock_irqsave(&g_pcdev_ctx.dma_ctx.dma_lock_rc, dma_flags);
-        if (list_empty(&g_pcdev_ctx.dma_ctx.head_rc))
-        {
-            is_empty = 1;
-        }
-        else
-        {
-            is_empty = 0;
-        }
+        is_empty = !!list_empty(&g_pcdev_ctx.dma_ctx.head_rc);
         list_add(&port->transfer_info_rc[entry].list, &g_pcdev_ctx.dma_ctx.head_rc);
         spin_unlock_irqrestore(&g_pcdev_ctx.dma_ctx.dma_lock_rc, dma_flags);
 
@@ -1167,17 +1079,13 @@ void pcie_cdev_dma_read_process(struct pcie_cdev_port *port)
 static int pcie_cdev_dma_write_complete(u32 direction, u32 status, void *dev_info)
 {
     struct pcie_cdev_port *port = (struct pcie_cdev_port *)dev_info;
-    struct pcie_cdev_dma_list *list = NULL;
     struct pcdev_desc *desc = NULL;
     unsigned int entry;
     unsigned long flags;
-    unsigned long dma_flags;
     unsigned int s_tx_rp;
     int ret;
-    unsigned int need_kick = 0;
 
     PCDEV_TRACE("in\n");
-    PCDEV_INFO(port->port_num, "in\n");
     g_pcdev_ctx.dma_ctx.dma_trans_cmp++;
     spin_lock_irqsave(&port->port_lock, flags);
 
@@ -1201,25 +1109,6 @@ static int pcie_cdev_dma_write_complete(u32 direction, u32 status, void *dev_inf
     }
 
     port->pstats.tx_dma_send_complete++;
-    if (g_pcdev_ctx.work_mode == pcie_ep)
-    {
-        spin_lock_irqsave(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
-        list = list_last_entry(&g_pcdev_ctx.dma_ctx.head, struct pcie_cdev_dma_list, list);
-        list_del(&list->list);
-
-        if (!list_empty(&g_pcdev_ctx.dma_ctx.head))
-        {
-            need_kick = 1;
-        }
-        spin_unlock_irqrestore(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
-
-        if (need_kick)
-        {
-            port->pstats.kick_dma_2++;
-            kick_dma_transfer(port);
-        }
-    }
-
     s_tx_rp = readl(port->tx_rp);
 
     entry = s_tx_rp % port->tx_num;
@@ -1260,168 +1149,230 @@ out:
 }
 
 #include <linux/list.h>
+
+#define VCOM_STATE_OPEN 0
+#define VCOM_STATE_DISCONNET 1
+#define VCOM_STATE_READABLE 2
+// writing
+#define VCOM_STATE_BUSY 3
+
 typedef struct _vcom_data
 {
-    long long size;
-    struct mutex list_mutex;
+    unsigned long size;
+    unsigned long flag;
+
+    unsigned long ref_count : 8;
+    unsigned long rerr : 8;
+    unsigned long werr : 8;
+
+    struct mutex list_lock;
     struct list_head list;
-    struct file *file_open;
-    wait_queue_head_t r_wait;
+    struct file *file;
+    wait_queue_head_t wqueue;
 } vcom_data;
+
 typedef struct _vcom_data_list
 {
     struct list_head list;
     long long size;
     char data[0];
 } vcom_data_list;
-vcom_data pcie_cdev_read_data_tatol;
+vcom_data pcie_cdev_read_data_tatol[PCIE_CDEV_COUNT];
 
-void pcie_cdev_read_tmp_cb(void);
-int first = 0;
-void pcie_cdev_read_init(struct file *file_open)
+#define PCDEV_INIT_FLAG BIT(0)
+
+void pcie_cdev_read_tmp_cb(void *);
+
+/**
+ * should be called at the first time of open
+ */
+void pcie_cdev_read_init(struct file *file)
 {
-    pcie_cdev_read_data_tatol.file_open = file_open;
-    INIT_LIST_HEAD(&pcie_cdev_read_data_tatol.list);
-    mutex_init(&pcie_cdev_read_data_tatol.list_mutex);
-    init_waitqueue_head(&pcie_cdev_read_data_tatol.r_wait);
-    printk(KERN_ERR "[%s:%d]\n", __func__, __LINE__);
-    if (first == 0)
-    {
-        pcie_cdev_ioctl(pcie_cdev_read_data_tatol.file_open, PCDEV_IOCTL_SET_READ_CB, (unsigned long)pcie_cdev_read_tmp_cb);
-        first = 1;
-    }
+    vcom_data *pdata = file->private_data;
+
+    pdata->file = file;
+    pdata->ref_count++;
+    PCDEV_TRACE("ref_count %d\n", pdata->ref_count);
+
+    // already opened
+    if (test_bit(VCOM_STATE_OPEN, &pdata->flag) || pdata->ref_count > 1)
+        return;
+
+    PCDEV_LINE;
+    INIT_LIST_HEAD(&pdata->list);
+    mutex_init(&pdata->list_lock);
+    init_waitqueue_head(&pdata->wqueue);
+    pcie_cdev_ioctl(pdata->file, PCDEV_IOCTL_SET_READ_CB, (unsigned long)pcie_cdev_read_tmp_cb);
+    set_bit(VCOM_STATE_OPEN, &pdata->flag);
+    PCDEV_LINE;
 }
-void pcie_cdev_read_close(struct file *file_open)
+
+void pcie_cdev_read_close(struct file *file)
 {
     vcom_data_list *pos, *n;
-    mutex_lock(&pcie_cdev_read_data_tatol.list_mutex);
-    list_for_each_entry_safe(pos, n, (&pcie_cdev_read_data_tatol.list), list)
-    {
+    vcom_data *pdata = file->private_data;
 
-        //lock
-        pcie_cdev_read_data_tatol.size -= pos->size;
-        list_del(&pos->list);
-        //end
-        kfree(pos);
-        //
-    }
-    mutex_unlock(&pcie_cdev_read_data_tatol.list_mutex);
-    if (first == 1)
+    // not opened
+    if (!pdata)
+        return;
+
+    mutex_lock(&pdata->list_lock);
+
+    if (pdata->ref_count > 0)
+        pdata->ref_count--;
+
+    PCDEV_TRACE("ref_count %d\n", pdata->ref_count);
+    // deinit data field at the last close
+    if (!pdata->ref_count)
     {
-        pcie_cdev_ioctl(pcie_cdev_read_data_tatol.file_open, PCDEV_IOCTL_SET_READ_CB, 0);
-        first = 0;
+        pcie_cdev_ioctl(pdata->file, PCDEV_IOCTL_SET_READ_CB, (unsigned long)NULL);
+        clear_bit(VCOM_STATE_OPEN, &pdata->flag);
+        pdata->file = NULL;
+
+        list_for_each_entry_safe(pos, n, (&pdata->list), list)
+        {
+            pdata->size -= pos->size;
+            list_del(&pos->list);
+            SAFETYFREE(pos);
+        }
     }
-    pcie_cdev_read_data_tatol.file_open = NULL;
+
+    mutex_unlock(&pdata->list_lock);
 }
 
 #define ADP_PCDEV_FILP_INVALID(filp) (IS_ERR_OR_NULL(filp))
 
-void pcie_cdev_read_tmp_cb(void)
+void pcie_cdev_read_tmp_cb(void *arg)
 {
     pcdev_wr_async_info_s rw_info;
-    int ret;
     vcom_data_list *data_tmp = NULL;
-    // unsigned int port_n = pcdev_ttyGS0;
-    if (pcie_cdev_read_data_tatol.size > 1000000)
-    {
-        printk(KERN_ERR "[%s:%d]tatol.size:%llu\n", __func__, __LINE__, pcie_cdev_read_data_tatol.size);
-        return;
-    }
-    if (unlikely(ADP_PCDEV_FILP_INVALID(pcie_cdev_read_data_tatol.file_open)))
-    {
-        return;
-    }
-    pcie_cdev_ioctl(pcie_cdev_read_data_tatol.file_open, PCDEV_IOCTL_GET_RD_BUFF, (unsigned long)&rw_info);
+    struct pcie_cdev_port *port = arg;
+    vcom_data *pdata = &pcie_cdev_read_data_tatol[port->port_num];
 
+    // free old buffer, FIFO, you know
+    if (pdata->size > 1000000)
+    {
+        vcom_data_list *pos, *n;
+        list_for_each_entry_safe(pos, n, (&pdata->list), list)
+        {
+            list_del(&pos->list);
+            SAFETYFREE(pos);
+        }
+        pdata->size = 0;
+    }
+
+    port->pstats.get_buf_call++;
+    pcie_cdev_get_read_buf(port, &rw_info);
     if (rw_info.size > 0 && rw_info.size <= 2048 && rw_info.p_vaddr)
     {
-        //print_pkt1(port_n, rw_info.p_vaddr, rw_info.size);
         data_tmp = kzalloc(sizeof(vcom_data_list) + rw_info.size, GFP_KERNEL);
         if (data_tmp == NULL)
         {
-            printk(KERN_ERR "[%s:%d]data_tmp malloc err\n", __func__, __LINE__);
+            PCDEV_ERR("data_tmp kzalloc err\n");
             return;
         }
         memcpy(data_tmp->data, rw_info.p_vaddr, rw_info.size - 1);
         data_tmp->size = rw_info.size;
-        //lock
-        mutex_lock(&pcie_cdev_read_data_tatol.list_mutex);
-        pcie_cdev_read_data_tatol.size += rw_info.size;
-        list_add_tail(&data_tmp->list, &pcie_cdev_read_data_tatol.list);
-        mutex_unlock(&pcie_cdev_read_data_tatol.list_mutex);
-        printk("[%s:%d]total size:%lld\n", __func__, __LINE__, pcie_cdev_read_data_tatol.size);
-        //end
-        wake_up_interruptible(&pcie_cdev_read_data_tatol.r_wait);
-        ret = memset_s(rw_info.p_vaddr, 1024, 0, rw_info.size);
-        if (ret)
-        {
-            PCDEV_ERR("memset_s failed, line: %d \n", __LINE__);
-        }
+        print_pkt(port->port_num, data_tmp->data, rw_info.size);
+
+        mutex_lock(&pdata->list_lock);
+        pdata->size += rw_info.size;
+        list_add_tail(&data_tmp->list, &pdata->list);
+        set_bit(VCOM_STATE_READABLE, &pdata->flag);
+        mutex_unlock(&pdata->list_lock);
+        PCDEV_TRACE("total size: %lu\n", pdata->size);
+        wake_up_interruptible(&pdata->wqueue);
     }
     else
     {
-        PCDEV_ERR("err   buf:%lx  size:%d \n", (uintptr_t)rw_info.p_vaddr, rw_info.size);
+        PCDEV_TRACE("err buf: %lx, size: %u\n", (uintptr_t)rw_info.p_vaddr, rw_info.size);
     }
-    pcie_cdev_ioctl(pcie_cdev_read_data_tatol.file_open, PCDEV_IOCTL_RETURN_BUFF, (unsigned long)&rw_info);
+
+    port->pstats.ret_buf_call++;
+    pcie_cdev_ret_read_buf(port, &rw_info);
 }
 
 ssize_t pcie_cdev_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
     int ret;
-    int count_sch = 0;
-    size_t count_tmp = 0;
-    size_t count_to_copy;
-
+    size_t count_total;
+    size_t count_copied = 0;
     vcom_data_list *pos, *n;
-    DECLARE_WAITQUEUE(wait, current);
-    add_wait_queue(&pcie_cdev_read_data_tatol.r_wait, &wait);
+    vcom_data *pdata = file->private_data;
+    int portnum = pcie_cdev_get_port_num_by_file(file);
 
-    while (0 == pcie_cdev_read_data_tatol.size)
+    if (unlikely(!pdata))
+        return -EFAULT;
+
+    // no data to read
+    if (file->f_flags & O_NONBLOCK && !pdata->size)
+        return -EAGAIN;
+
+    for (;;)
     {
-        if (file->f_flags & O_NONBLOCK)
-        {
-            ret = -EAGAIN;
-            goto out;
-        }
-        __set_current_state(TASK_INTERRUPTIBLE);
-        schedule();
-        count_sch++;
-        if (count_sch == 10)
-        {
-            printk("[%s:%d]count_sch:%d\n", __func__, __LINE__, count_sch);
-            count_sch = 0;
-            goto out;
-        }
-    }
+        PCDEV_LINE;
+        // fixme: consider about module_exit
+        ret = wait_event_interruptible(pdata->wqueue,
+                                       (!test_bit(VCOM_STATE_OPEN, &pdata->flag) ||
+                                        !pdata->ref_count ||
+                                        pdata->size));
 
-    count_to_copy = pcie_cdev_read_data_tatol.size > count ? count : pcie_cdev_read_data_tatol.size;
-    //count_tmp = count_to_copy;
-    //printk(KERN_ERR"[%s:%d]count_to_copy:%ld\n",__func__,__LINE__,count_to_copy);
+        PCDEV_LINE;
+        if (ret == -ERESTARTSYS)
+            return -EAGAIN;
 
-    list_for_each_entry_safe(pos, n, (&pcie_cdev_read_data_tatol.list), list)
-    {
-        //printk(KERN_ERR"[%s:%d]count_to_copy:%ld,pos->size:%lld\n",__func__,__LINE__,count_to_copy,pos->size);
-        if (count_to_copy < pos->size)
+        if (pdata->size)
             break;
-        copy_to_user(buf + count_tmp, pos->data, pos->size);
-        count_tmp += pos->size;
-        count_to_copy -= pos->size;
-        //printk(KERN_ERR"[%s:%d]count_to_copy:%ld,pcount_tmp:%lld\n",__func__,__LINE__,count_to_copy,count_tmp);
-        //lock
-        mutex_lock(&pcie_cdev_read_data_tatol.list_mutex);
-        pcie_cdev_read_data_tatol.size -= pos->size;
-        list_del(&pos->list);
-        mutex_unlock(&pcie_cdev_read_data_tatol.list_mutex);
-        //end
-        kfree(pos);
-        //
+        else
+            goto out;
     }
+
+    PCDEV_LINE;
+    count_total = pdata->size > count ? count : pdata->size;
+    list_for_each_entry_safe(pos, n, (&pdata->list), list)
+    {
+        size_t want_copy = count_total - count_copied;
+        if (want_copy == 0)
+            break;
+
+        print_pkt(portnum, pos->data, pos->size);
+        want_copy = (want_copy < pos->size) ? want_copy : pos->size;
+        if (likely(0 == copy_to_user(buf + count_copied, pos->data, want_copy)))
+        {
+            count_copied += want_copy;
+        }
+        else
+        {
+            PCDEV_ERR("fail to copy_to_user bytes = %ld", want_copy);
+        }
+
+        mutex_lock(&pdata->list_lock);
+        pdata->size -= want_copy;
+
+        // if still some data left, do not remove the node
+        if (pos->size != want_copy)
+        {
+            memmove(pos->data, pos->data + want_copy, pos->size - want_copy);
+            pos->size -= want_copy;
+            break;
+        }
+        else
+        {
+            list_del(&pos->list);
+            SAFETYFREE(pos);
+        }
+        mutex_unlock(&pdata->list_lock);
+    }
+
+    if (!pdata->size)
+    {
+        PCDEV_INFO("clear read\n");
+        clear_bit(VCOM_STATE_READABLE, &pdata->flag);
+    }
+
 out:
-    set_current_state(TASK_RUNNING);
-    remove_wait_queue(&pcie_cdev_read_data_tatol.r_wait, &wait);
-    if (count_tmp == 0)
-        return ret;
-    return count_tmp - count_to_copy;
+    PCDEV_LINE;
+    return count_total;
 }
 
 #ifdef CONFIG_PCIE_CDEV_DMA_DOUBLE
@@ -1441,7 +1392,6 @@ static int pcie_send_data_dma(struct pcie_cdev_port *port, struct pcdev_desc *de
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         return -EIO;
     }
 
@@ -1466,53 +1416,14 @@ static int pcie_send_data_dma(struct pcie_cdev_port *port, struct pcdev_desc *de
 #ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
 static int pcie_send_data_dma(struct pcie_cdev_port *port, struct pcdev_desc *desc)
 {
-    unsigned int entry;
-    unsigned long dma_flags;
-    unsigned int is_empty = 0;
-    int ret = 0;
+    writel(1, port->pcie_cdev_send_irq[dma_send]);
+    (void)readl(port->pcie_cdev_send_irq[dma_send]);
 
-    if (g_pcdev_ctx.work_mode == pcie_ep)
+    if (pcie_cdev_linkdown())
     {
-        entry = *port->tx_rp_todo % port->tx_num;
-        port->transfer_info[entry].dma_info.element.sar_low = desc->s_dma_low;
-        port->transfer_info[entry].dma_info.element.sar_high = desc->s_dma_high;
-        port->transfer_info[entry].dma_info.element.dar_low = desc->d_dma_low;
-        port->transfer_info[entry].dma_info.element.dar_high = desc->d_dma_high;
-        port->transfer_info[entry].dma_info.element.transfer_size = desc->data_size;
-
-        if (pcie_cdev_linkdown())
-        {
-            PCDEV_ERR("ep ports not allocked \n");
-            return -EIO;
-        }
-
-        spin_lock_irqsave(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
-        if (list_empty(&g_pcdev_ctx.dma_ctx.head))
-        {
-            is_empty = 1;
-        }
-        list_add(&port->transfer_info[entry].list, &g_pcdev_ctx.dma_ctx.head);
-        spin_unlock_irqrestore(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
-
-        if (is_empty)
-        {
-            port->pstats.kick_dma_1++;
-            ret = kick_dma_transfer(port);
-        }
+        return -EIO;
     }
-    else if (g_pcdev_ctx.work_mode == pcie_rc)
-    {
-        writel(1, port->pcie_cdev_send_irq[dma_send]);
-        (void)readl(port->pcie_cdev_send_irq[dma_send]);
-
-        if (pcie_cdev_linkdown())
-        {
-            PCDEV_ERR("ep ports not allocked \n");
-            return -EIO;
-        }
-        return g_pcdev_ctx.send_irq();
-    }
-    return ret;
+    return g_pcdev_ctx.send_irq();
 }
 #endif
 
@@ -1524,7 +1435,7 @@ int pcie_cdev_start_tx(struct pcie_cdev_port *port, pcdev_wr_async_info_s *rw_in
     dma_addr_t s_pbuf = 0;
     unsigned int s_tx_rp_todo;
 
-    PCDEV_INFO(port->port_num, "in port:%d\n", port->port_num);
+    PCDEV_INFO("in port: %s\n", port->name);
 
     if (*port->tx_rp_todo == *port->tx_wp)
     {
@@ -1559,7 +1470,6 @@ int pcie_cdev_start_tx(struct pcie_cdev_port *port, pcdev_wr_async_info_s *rw_in
     if (!port->remote_stat->bits.read_start)
     {
         PCDEV_ERR("remote realloc\n");
-        ;
         status = -EACCES;
         goto out;
     }
@@ -1575,7 +1485,8 @@ int pcie_cdev_start_tx(struct pcie_cdev_port *port, pcdev_wr_async_info_s *rw_in
     }
     else
     {
-        PCDEV_INFO(port->port_num, "dma_map_single(%d) in\n", *port->tx_rp_todo);
+        PCDEV_INFO("dma_map_single(%d) in\n", *port->tx_rp_todo);
+        port->dmamap_skip = 0;
         s_pbuf = dma_map_single(port->dev, (void *)rw_info->p_vaddr, rw_info->size, DMA_TO_DEVICE);
     }
 
@@ -1621,16 +1532,13 @@ void pcdev_modem_msc_write_cb(struct pcie_cdev_port *port)
     struct pcdev_msc_list *list = NULL;
     unsigned long flags;
     int ret;
-    PCDEV_ERR("in port(%d)\n", port->port_num);
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
 
     if (pcie_cdev_vote(msc_write_mode, port->port_num))
-    {
         return;
-    }
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         goto out;
     }
 
@@ -1657,25 +1565,22 @@ void pcdev_modem_msc_write_cb(struct pcie_cdev_port *port)
     }
 
     if (list_empty(&port->msc_stru_head))
-    {
         goto out1;
-    }
 
     list = list_last_entry(&port->msc_stru_head, struct pcdev_msc_list, list);
     list_del(&list->list);
 
     memcpy_toio((void *)port->msc_stru, &list->msc_stru, sizeof(pcdev_mdm_msc_stru));
     *port->msc_busy = 1;
-    kfree(list);
+    SAFETYFREE(list);
 
     writel(1, port->pcie_cdev_send_irq[msc_stru_send]);
     (void)readl(port->pcie_cdev_send_irq[msc_stru_send]);
 
     ret = g_pcdev_ctx.send_irq();
     if (!ret)
-    {
         port->pstats.irq_send++;
-    }
+
     port->pstats.msc_stru_send++;
     spin_unlock_irqrestore(&port->port_lock, flags);
     pcie_cdev_evt_push(port, &g_pcdev_msc_stru_send_evt_manage);
@@ -1696,11 +1601,10 @@ int pcdev_modem_msc_write(struct pcie_cdev_port *port, unsigned long arg)
     struct pcdev_msc_list *msc_list = NULL;
     int ret;
     unsigned long flags;
-    PCDEV_ERR("in port(%d)\n", port->port_num);
+
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
     if (!arg)
-    {
         PCDEV_ERR("arg is NULL\n");
-    }
 
     msc_list = kzalloc(sizeof(struct pcdev_msc_list), GFP_KERNEL);
     if (!msc_list)
@@ -1729,9 +1633,7 @@ int pcie_cdev_write_base(struct pcie_cdev_port *port, pcdev_wr_async_info_s *rw_
     int status = 0;
     unsigned long flags;
 
-    PCDEV_TRACE("in\n");
-    PCDEV_INFO(port->port_num, "port_name:%s, port_num:%d\n", port->name, port->port_num);
-
+    PCDEV_INFO("port_name: %s, port_num: %d\n", port->name, port->port_num);
     if (rw_info->size == 0)
     {
         PCDEV_ERR("zero length packet to send\n");
@@ -1745,9 +1647,7 @@ int pcie_cdev_write_base(struct pcie_cdev_port *port, pcdev_wr_async_info_s *rw_
     }
 
     if (pcie_cdev_vote(write_base, port->port_num))
-    {
         return -ENOTBLK;
-    }
 
     spin_lock_irqsave(&port->port_lock, flags);
 
@@ -1760,7 +1660,6 @@ int pcie_cdev_write_base(struct pcie_cdev_port *port, pcdev_wr_async_info_s *rw_
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         status = -EIO;
         goto unlock;
     }
@@ -1813,52 +1712,59 @@ ssize_t pcie_cdev_write(struct file *file, const char __user *buf, size_t count,
     int status;
     pcdev_wr_async_info_s rw_info;
     char *buf_tmp = NULL;
-    if (unlikely(NULL == buf || 0 == count))
-    {
-        PCDEV_ERR("invalid param\n");
-        return -EFAULT;
-    }
+    vcom_data *pdata = file->private_data;
 
-    port_num = pcie_cdev_get_port_num(inode);
-    if (port_num < 0)
-    {
-        return port_num;
-    }
+    PCDEV_LINE;
+    if (unlikely(!buf || count < 0))
+        return -EINVAL;
 
-    status = fs_user_space_check(port_num);
-    if (status)
-    {
-        return status;
-    }
+    PCDEV_LINE;
+    buf_tmp = memdup_user(buf, count);
+    if (IS_ERR(buf))
+        return PTR_ERR(buf);
 
-    port = g_pcie_cdev_ports[port_num].port;
-    if (port == NULL)
-    {
-        return -ENODEV;
-    }
-    buf_tmp = kzalloc(PAGE_SIZE, GFP_KERNEL);
-    copy_from_user(buf_tmp, buf, count);
     rw_info.p_vaddr = (char *)buf_tmp;
     rw_info.p_paddr = NULL;
     rw_info.size = (unsigned int)count;
 
+    PCDEV_LINE;
+    port_num = pcie_cdev_get_port_num_by_inode(inode);
+    if (port_num < 0)
+    {
+        status = port_num;
+        goto out;
+    }
+
+    PCDEV_LINE;
+    status = fs_user_space_check(port_num);
+    if (status)
+        goto out;
+
+    PCDEV_LINE;
+    port = g_pcie_cdev_ports[port_num].port;
+    if (port == NULL)
+    {
+        status = -ENODEV;
+        goto out;
+    }
+
+    PCDEV_LINE;
     port->pstats.sync_tx_submit++;
+    set_bit(VCOM_STATE_BUSY, &pdata->flag);
     status = pcie_cdev_write_base(port, &rw_info, 1);
     if (status > 0)
-    {
         port->pstats.sync_tx_done++;
-    }
     else
-    {
         port->pstats.sync_tx_fail++;
-    }
-    kfree(buf_tmp);
+    clear_bit(VCOM_STATE_BUSY, &pdata->flag);
+
+out:
+    SAFETYFREE(buf_tmp);
     return (ssize_t)status;
 }
 
 static void pcie_cdev_event_send(struct pcie_cdev_port *port)
 {
-    int ret;
     if (!port->remote_stat->bits.open)
     {
         port->pstats.remote_close++;
@@ -1868,11 +1774,8 @@ static void pcie_cdev_event_send(struct pcie_cdev_port *port)
     writel(1, port->pcie_cdev_send_irq[event_send]);
     (void)readl(port->pcie_cdev_send_irq[event_send]);
 
-    ret = g_pcdev_ctx.send_irq();
-    if (!ret)
-    {
+    if (!g_pcdev_ctx.send_irq())
         port->pstats.irq_send++;
-    }
 
     return;
 }
@@ -1886,14 +1789,10 @@ int pcie_cdev_get_read_buf(struct pcie_cdev_port *port, pcdev_wr_async_info_s *w
     dma_addr_t d_pbuf = 0;
 
     PCDEV_TRACE("in\n");
-
     if (pcie_cdev_vote(get_read_buf, port->port_num))
-    {
         return -ENOTBLK;
-    }
 
     spin_lock_irqsave(&port->port_lock, flags);
-
     if (port->pstats.openclose == false)
     {
         port->pstats.local_close++;
@@ -1903,7 +1802,6 @@ int pcie_cdev_get_read_buf(struct pcie_cdev_port *port, pcdev_wr_async_info_s *w
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         status = -EIO;
         goto out;
     }
@@ -1955,20 +1853,18 @@ int pcie_cdev_get_read_buf(struct pcie_cdev_port *port, pcdev_wr_async_info_s *w
     wr_info->p_paddr = (char *)d_pbuf;
     wr_info->size = desc->data_size;
     wr_info->p_priv = (void *)(unsigned long)desc->userfield0;
-    PCDEV_INFO(port->port_num, "buf(%d)\n", port->rx_rp_toget);
+    PCDEV_INFO("buf(%d)\n", port->rx_rp_toget);
     //print_pkt(port->port_num, wr_info->p_vaddr, wr_info->size);
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         status = -EIO;
         goto out;
     }
 
     if (!port->set_readbuf)
-    {
         dma_unmap_single(port->dev, d_pbuf, wr_info->size, DMA_FROM_DEVICE);
-    }
+
     desc->d_vaddr = 0;
     desc->d_dma_low = 0;
     desc->d_dma_high = 0;
@@ -2033,11 +1929,9 @@ static int pcie_cdev_realloc_read_buf(struct pcie_cdev_port *port, pcdev_read_bu
     unsigned long flags;
 
     if (pcie_cdev_vote(realloc_mode, port->port_num))
-    {
         return -ENOTBLK;
-    }
 
-    PCDEV_ERR("realloc buf: port(%d):size 0x%x\n", port->port_num, buf_info->buf_size);
+    PCDEV_TRACE("realloc buf: port(%d):size 0x%x\n", port->port_num, buf_info->buf_size);
     spin_lock_irqsave(&port->port_lock, flags);
 
     if (port->pstats.openclose == false)
@@ -2048,16 +1942,13 @@ static int pcie_cdev_realloc_read_buf(struct pcie_cdev_port *port, pcdev_read_bu
     }
 
     if (buf_info->buf_size == port->rx_buf_max_size)
-    {
         goto out;
-    }
 
     port->local_stat->bits.read_start = 0;
     *port->rx_buf_max_sz = buf_info->buf_size;
     port->rx_buf_max_size = buf_info->buf_size;
 
     spin_unlock_irqrestore(&port->port_lock, flags);
-
     (void)wait_event_timeout(port->buf_free_wait, (*port->rx_wp - port->rx_rp_toget == port->rx_num), 300);
 
     spin_lock_irqsave(&port->port_lock, flags);
@@ -2067,6 +1958,7 @@ static int pcie_cdev_realloc_read_buf(struct pcie_cdev_port *port, pcdev_read_bu
         status = -EBUSY;
         goto out;
     }
+
     pcie_cdev_free_read_buf(port);
     pcie_cdev_alloc_read_buf(port);
     port->local_stat->bits.read_start = 1;
@@ -2087,8 +1979,9 @@ static void set_read_cb(struct pcie_cdev_port *port, unsigned int cmd, unsigned 
     read_cb_null = port->pstats.read_cb_null;
     port->pstats.read_cb_null = 0;
     spin_unlock_irqrestore(&port->port_lock, flags);
-    if (arg == 0)
+    if (arg == (unsigned long)NULL)
         return;
+
     if (read_cb_null)
     {
         pcie_cdev_evt_push(port, &g_pcdev_read_evt_manage);
@@ -2104,12 +1997,9 @@ void pcdev_send_evt_cb(struct pcie_cdev_port *port)
     PCDEV_TRACE("in port(%d)\n", port->port_num);
 
     if (pcie_cdev_vote(send_evt, port->port_num))
-    {
         return;
-    }
 
     spin_lock_irqsave(&port->port_lock, flags);
-
     if (port->pstats.openclose == false)
     {
         port->pstats.local_close++;
@@ -2118,12 +2008,10 @@ void pcdev_send_evt_cb(struct pcie_cdev_port *port)
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         goto out;
     }
 
     memcpy_toio((void *)port->event_type, &port->event_type_arg, sizeof(pcdev_evt_e));
-
     pcie_cdev_event_send(port);
     port->pstats.event_send++;
 
@@ -2139,9 +2027,7 @@ void pcdev_send_evt(struct pcie_cdev_port *port, unsigned int cmd, unsigned long
     PCDEV_TRACE("in port(%d)\n", port->port_num);
 
     if (arg == 0)
-    {
-        PCDEV_ERR("cmd:0x%x arg err\n", cmd);
-    }
+        PCDEV_INFO("cmd:0x%x arg err\n", cmd);
 
     port->event_type_arg = *((unsigned int *)((uintptr_t)arg));
 
@@ -2153,12 +2039,10 @@ void pcdev_send_read_sig_cb(struct pcie_cdev_port *port)
 {
     unsigned long flags;
     int ret;
-    PCDEV_ERR("in port(%d)\n", port->port_num);
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
 
     if (pcie_cdev_vote(send_evt, port->port_num))
-    {
         return;
-    }
 
     spin_lock_irqsave(&port->port_lock, flags);
 
@@ -2170,7 +2054,6 @@ void pcdev_send_read_sig_cb(struct pcie_cdev_port *port)
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         goto out;
     }
 
@@ -2188,9 +2071,7 @@ void pcdev_send_read_sig_cb(struct pcie_cdev_port *port)
 
     ret = g_pcdev_ctx.send_irq();
     if (!ret)
-    {
         port->pstats.irq_send++;
-    }
 
     port->pstats.rel_ind_send++;
 
@@ -2204,18 +2085,14 @@ EXPORT_SYMBOL(pcdev_send_read_sig_cb);
 void pcdev_send_read_sig(struct pcie_cdev_port *port, unsigned int cmd, unsigned long arg)
 {
     int ret;
-    PCDEV_ERR("in port(%d)\n", port->port_num);
 
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
     if (arg == 0)
-    {
         PCDEV_ERR("cmd:0x%x arg err\n", cmd);
-    }
 
     ret = memcpy_s(&port->read_sig_arg, sizeof(port->read_sig_arg), (void *)arg, sizeof(pcdev_mdm_msc_stru));
     if (ret)
-    {
-        PCDEV_ERR("memcpy_s failed, line: %d \n", __LINE__);
-    }
+        PCDEV_ERR("memcpy_s failed\n");
 
     pcie_cdev_evt_push(port, &g_pcdev_read_sig_send_evt_manage);
     queue_delayed_work(g_cdev_driver->pcdev_work_queue, &g_pcdev_access_work, 0);
@@ -2225,12 +2102,10 @@ void pcdev_send_rel_ind_cb(struct pcie_cdev_port *port)
 {
     unsigned long flags;
     int ret;
-    PCDEV_ERR("in port(%d)\n", port->port_num);
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
 
     if (pcie_cdev_vote(send_evt, port->port_num))
-    {
         return;
-    }
 
     spin_lock_irqsave(&port->port_lock, flags);
 
@@ -2242,7 +2117,6 @@ void pcdev_send_rel_ind_cb(struct pcie_cdev_port *port)
 
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         goto out;
     }
 
@@ -2260,9 +2134,7 @@ void pcdev_send_rel_ind_cb(struct pcie_cdev_port *port)
 
     ret = g_pcdev_ctx.send_irq();
     if (!ret)
-    {
         port->pstats.irq_send++;
-    }
 
     port->pstats.read_sig_send++;
 out:
@@ -2274,12 +2146,10 @@ EXPORT_SYMBOL(pcdev_send_rel_ind_cb);
 
 void pcdev_send_rel_ind(struct pcie_cdev_port *port, unsigned int cmd, unsigned long arg)
 {
-    PCDEV_ERR("in port(%d)\n", port->port_num);
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
 
     if (arg == 0)
-    {
         PCDEV_ERR("cmd:0x%x arg err\n", cmd);
-    }
 
     port->rel_ind_arg = *((unsigned int *)((uintptr_t)arg));
 
@@ -2296,37 +2166,12 @@ static int write_async_ioctl(struct pcie_cdev_port *port, unsigned int cmd, unsi
         PCDEV_ERR("PCDEV_IOCTL_WRITE_ASYNC invalid param\n");
         return -EFAULT;
     }
+
     rw_info = (pcdev_wr_async_info_s *)((uintptr_t)arg);
     port->pstats.write_async_call++;
     PCDEV_TRACE("PCDEV_IOCTL_WRITE_ASYNC\n");
     print_pkt(port->port_num, rw_info->p_vaddr, rw_info->size);
     status = pcie_cdev_write_base(port, rw_info, 0);
-    return status;
-}
-
-int pcdev_get_read_buf(struct pcie_cdev_port *port, unsigned int cmd, unsigned long arg)
-{
-    int status = 0;
-    if (0 == arg)
-    {
-        PCDEV_ERR("PCDEV_IOCTL_GET_RD_BUFF invalid param\n");
-        return -EFAULT;
-    }
-    port->pstats.get_buf_call++;
-    status = pcie_cdev_get_read_buf(port, (pcdev_wr_async_info_s *)((uintptr_t)arg));
-    return status;
-}
-
-int pcdev_ret_read_buf(struct pcie_cdev_port *port, unsigned int cmd, unsigned long arg)
-{
-    int status = 0;
-    if (0 == arg)
-    {
-        PCDEV_ERR("PCDEV_IOCTL_RETURN_BUFF invalid param\n");
-        return -EFAULT;
-    }
-    port->pstats.ret_buf_call++;
-    status = pcie_cdev_ret_read_buf(port, (pcdev_wr_async_info_s *)((uintptr_t)arg));
     return status;
 }
 
@@ -2359,6 +2204,7 @@ int set_read_buf(struct pcie_cdev_port *port, unsigned int cmd, unsigned long ar
         PCDEV_ERR("PCDEV_IOCTL_SET_READ_BUFF invalid param\n");
         return -EFAULT;
     }
+
     buf_info = (pcdev_read_buf_set_info_s *)(uintptr_t)arg;
     if (buf_info->buf_num != port->rx_num)
     {
@@ -2367,9 +2213,7 @@ int set_read_buf(struct pcie_cdev_port *port, unsigned int cmd, unsigned long ar
     }
 
     if (pcie_cdev_vote(realloc_mode, port->port_num))
-    {
         return -ENOTBLK;
-    }
 
     spin_lock_irqsave(&port->port_lock, flags);
 
@@ -2386,11 +2230,7 @@ int set_read_buf(struct pcie_cdev_port *port, unsigned int cmd, unsigned long ar
         for (i = 0; i < (int)port->rx_num; i++)
         {
             desc = port->rx_desc + i;
-            if (port->d_vaddr[i])
-            {
-                kfree((void *)port->d_vaddr[i]);
-                port->d_vaddr[i] = 0;
-            }
+            SAFETYFREE(port->d_vaddr[i]);
         }
         port->rd_buf_alloced = 0;
     }
@@ -2427,11 +2267,9 @@ static struct pcie_cdev_port *pcdev_get_port(struct inode *inode)
     int port_num;
     int status;
 
-    port_num = pcie_cdev_get_port_num(inode);
+    port_num = pcie_cdev_get_port_num_by_inode(inode);
     if (port_num < 0)
-    {
         return (struct pcie_cdev_port *)(-ENODEV);
-    }
 
     status = fs_user_space_check(port_num);
     if (status)
@@ -2441,9 +2279,7 @@ static struct pcie_cdev_port *pcdev_get_port(struct inode *inode)
 
     port = g_pcie_cdev_ports[port_num].port;
     if (port == NULL)
-    {
         return (struct pcie_cdev_port *)(-ENODEV);
-    }
 
     return port;
 }
@@ -2473,8 +2309,8 @@ long pcie_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
     struct inode *inode = file->f_path.dentry->d_inode;
     struct pcie_cdev_port *port = NULL;
     int status = 0;
-    PCDEV_TRACE("in cmd:0x%x\n", cmd);
 
+    PCDEV_TRACE("in cmd:0x%x\n", cmd);
     port = pcdev_get_port(inode);
     if (IS_ERR_OR_NULL(port))
     {
@@ -2520,14 +2356,6 @@ long pcie_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
         status = write_async_ioctl(port, cmd, arg);
         break;
 
-    case PCDEV_IOCTL_GET_RD_BUFF:
-        status = pcdev_get_read_buf(port, cmd, arg);
-        break;
-
-    case PCDEV_IOCTL_RETURN_BUFF:
-        status = pcdev_ret_read_buf(port, cmd, arg);
-        break;
-
     case PCDEV_IOCTL_RELLOC_READ_BUFF:
         status = realloc_read_buf(port, cmd, arg);
         break;
@@ -2560,68 +2388,56 @@ long pcie_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
         break;
 
     default:
-        status = -1;
+        status = 0;
         break;
     }
     return status;
 }
 
-static int pcie_cdev_open(struct inode *inode, struct file *filp)
+int pcie_cdev_open(struct inode *inode, struct file *filp)
 {
     int port_num;
-    struct pcie_cdev_port *port = NULL;
     int status;
     unsigned long flags;
     unsigned int i;
-    pcie_cdev_read_init(filp);
-    PCDEV_TRACE("in\n");
-    printk("%s:%d\n", __func__, __LINE__);
-    port_num = pcie_cdev_get_port_num(inode);
+    struct pcie_cdev_port *port = NULL;
+
+    PCDEV_LINE;
+    port_num = pcie_cdev_get_port_num_by_inode(inode);
     if (port_num < 0)
-    {
         return port_num;
-    }
-    PCDEV_TRACE("port num: %d \n", port_num);
+    PCDEV_TRACE("open port num: %d\n", port_num);
 
     port = g_pcie_cdev_ports[port_num].port;
     if (port == NULL)
-    {
         return -ENODEV;
-    }
-    printk("%s:%d\n", __func__, __LINE__);
+
+    PCDEV_LINE;
     status = fs_user_space_check(port_num);
     if (status)
-    {
         return status;
-    }
 
     if (pcie_cdev_vote(port_open, port->port_num))
-    {
         return -ENOTBLK;
-    }
-    printk("%s:%d\n", __func__, __LINE__);
-    spin_lock_irqsave(&port->port_lock, flags);
 
+    PCDEV_LINE;
+    filp->private_data = &pcie_cdev_read_data_tatol[port_num];
+    pcie_cdev_read_init(filp);
+
+    spin_lock_irqsave(&port->port_lock, flags);
+    status = 0;
+    port->pstats.open_count++;
+
+    // already opened
     if (port->pstats.openclose == true)
     {
-        status = -EBUSY;
+        PCDEV_LINE;
+        status = 0;
         goto out1;
     }
-    else
-    {
-        if (g_pcdev_ctx.init_count <= g_pcdev_ctx.exit_count)
-        {
-            PCDEV_ERR("pcdev not ready, can't open\n");
-            printk(KERN_ERR "pcdev not ready, can't open\n");
-            status = -ENOENT;
-            goto out1;
-        }
+    port->pstats.openclose = true;
 
-        status = 0;
-        port->pstats.openclose = true;
-        port->pstats.open_count++;
-    }
-    printk("%s:%d\n", __func__, __LINE__);
+    PCDEV_LINE;
     if (port->rd_buf_alloced)
     {
         *port->rx_buf_max_sz = port->rx_buf_max_size;
@@ -2635,7 +2451,8 @@ static int pcie_cdev_open(struct inode *inode, struct file *filp)
         PCDEV_ERR("alloc read buf fail\n");
         goto out2;
     }
-    printk("%s:%d\n", __func__, __LINE__);
+
+    PCDEV_LINE;
 #ifdef CONFIG_PCIE_CDEV_DMA_DOUBLE
     port->transfer_info = kzalloc(sizeof(struct pcie_cdev_dma_list) * port->tx_num, GFP_ATOMIC);
 
@@ -2658,50 +2475,7 @@ static int pcie_cdev_open(struct inode *inode, struct file *filp)
 #endif
 
 #ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-    if (g_pcdev_ctx.work_mode == pcie_ep)
-    {
-        port->transfer_info = kzalloc(sizeof(struct pcie_cdev_dma_list) * port->tx_num, GFP_ATOMIC);
-
-        if (port->transfer_info == NULL)
-        {
-            PCDEV_ERR("transfer_info alloc fail\n");
-            goto out3;
-        }
-
-        for (i = 0; i < port->tx_num; i++)
-        {
-            port->transfer_info[i].dma_info.id = g_pcdev_ctx.pcie_id;
-            port->transfer_info[i].dma_info.callback = pcie_cdev_dma_write_complete;
-            port->transfer_info[i].dma_info.callback_args = (void *)port;
-            port->transfer_info[i].dma_info.channel = g_pcdev_ctx.dma_ctx.dma_channel;
-            port->transfer_info[i].dma_info.direction = 1;
-            port->transfer_info[i].dma_info.transfer_type = PCIE_DMA_NORMAL_MODE;
-            port->transfer_info[i].dma_info.element_cnt = 1;
-        }
-        printk("%s:%d\n", __func__, __LINE__);
-        port->transfer_info_rc = kzalloc(sizeof(struct pcie_cdev_dma_list) * port->rx_num, GFP_ATOMIC);
-
-        if (port->transfer_info_rc == NULL)
-        {
-            PCDEV_ERR("transfer_info_rc alloc fail\n");
-            goto out4;
-        }
-
-        for (i = 0; i < port->rx_num; i++)
-        {
-            port->transfer_info_rc[i].dma_info.id = g_pcdev_ctx.pcie_id;
-            port->transfer_info_rc[i].dma_info.callback = pcie_cdev_dma_read_complete;
-            port->transfer_info_rc[i].dma_info.callback_args = (void *)port;
-            port->transfer_info_rc[i].dma_info.channel = g_pcdev_ctx.dma_ctx.dma_channel;
-            port->transfer_info_rc[i].dma_info.direction = 0;
-            port->transfer_info[i].dma_info.transfer_type = PCIE_DMA_NORMAL_MODE;
-            port->transfer_info[i].dma_info.element_cnt = 1;
-        }
-    }
-    else
-    {
-        port->dma_callback = pcie_cdev_dma_write_complete;
-    }
+    port->dma_callback = pcie_cdev_dma_write_complete;
 #endif
 
     port->write_buf_list = kzalloc(sizeof(struct pcdev_buf_list) * port->tx_num, GFP_ATOMIC);
@@ -2719,9 +2493,7 @@ static int pcie_cdev_open(struct inode *inode, struct file *filp)
     }
 
     for (i = 0; i < port->rx_num; i++)
-    {
         list_add(&port->ret_buf_list[i].list, &port->read_buf_head);
-    }
 
     port->local_stat->bits.read_start = 1;
     port->local_stat->bits.open = 1;
@@ -2729,17 +2501,19 @@ static int pcie_cdev_open(struct inode *inode, struct file *filp)
     goto out1;
 
 out6:
-    kfree(port->ret_buf_list);
+    SAFETYFREE(port->ret_buf_list);
+
 out5:
 #ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-    kfree(port->transfer_info_rc);
+    SAFETYFREE(port->transfer_info_rc);
 #endif
-out4:
-    kfree(port->transfer_info);
-out3:
+
+    SAFETYFREE(port->transfer_info);
     pcie_cdev_free_read_buf(port);
+
 out2:
     port->pstats.openclose = false;
+
 out1:
     spin_unlock_irqrestore(&port->port_lock, flags);
     pcie_cdev_unvote(port_open, port->port_num);
@@ -2754,8 +2528,7 @@ static void pcie_cdev_port_exit(struct pcie_cdev_port *port)
     struct pcdev_msc_list *msc_list = NULL;
     pcdev_write_info_s write_info;
 
-    PCDEV_ERR("in port(%d)\n", port->port_num);
-
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
     spin_lock_irqsave(&port->port_lock, flags);
     if (port->pstats.openclose == false)
     {
@@ -2764,17 +2537,9 @@ static void pcie_cdev_port_exit(struct pcie_cdev_port *port)
         return;
     }
 
-    if (port->transfer_info != NULL)
-    {
-        kfree((void *)port->transfer_info);
-        port->transfer_info = NULL;
-    }
+    SAFETYFREE(port->transfer_info);
 #ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-    if (port->transfer_info_rc != NULL)
-    {
-        kfree((void *)port->transfer_info_rc);
-        port->transfer_info_rc = NULL;
-    }
+    SAFETYFREE(port->transfer_info_rc);
 #endif
 
     head = &port->msc_stru_head;
@@ -2782,7 +2547,7 @@ static void pcie_cdev_port_exit(struct pcie_cdev_port *port)
     {
         msc_list = list_entry(head->next, struct pcdev_msc_list, list);
         list_del(&msc_list->list);
-        kfree(msc_list);
+        SAFETYFREE(msc_list);
     }
 
     head = &port->write_buf_head;
@@ -2806,17 +2571,8 @@ static void pcie_cdev_port_exit(struct pcie_cdev_port *port)
     INIT_LIST_HEAD(&port->ret_buf_head);
     INIT_LIST_HEAD(&port->read_buf_head);
 
-    if (port->ret_buf_list != NULL)
-    {
-        kfree((void *)port->ret_buf_list);
-        port->ret_buf_list = NULL;
-    }
-    if (port->write_buf_list != NULL)
-    {
-        kfree((void *)port->write_buf_list);
-        port->write_buf_list = NULL;
-    }
-
+    SAFETYFREE(port->ret_buf_list);
+    SAFETYFREE(port->write_buf_list);
     port->pstats.openclose = false;
     port->pstats.close_count++;
 
@@ -2832,8 +2588,7 @@ static void pcie_cdev_port_close(struct pcie_cdev_port *port)
     struct pcdev_msc_list *msc_list = NULL;
     pcdev_write_info_s write_info;
 
-    PCDEV_ERR("in port(%d)\n", port->port_num);
-
+    PCDEV_TRACE("in port(%d)\n", port->port_num);
     spin_lock_irqsave(&port->port_lock, flags);
     if (port->pstats.openclose == false)
     {
@@ -2841,17 +2596,10 @@ static void pcie_cdev_port_close(struct pcie_cdev_port *port)
         spin_unlock_irqrestore(&port->port_lock, flags);
         return;
     }
-    if (port->transfer_info != NULL)
-    {
-        kfree((void *)port->transfer_info);
-        port->transfer_info = NULL;
-    }
+
+    SAFETYFREE(port->transfer_info);
 #ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-    if (port->transfer_info_rc != NULL)
-    {
-        kfree((void *)port->transfer_info_rc);
-        port->transfer_info_rc = NULL;
-    }
+    SAFETYFREE(port->transfer_info_rc);
 #endif
 
     head = &port->msc_stru_head;
@@ -2859,7 +2607,7 @@ static void pcie_cdev_port_close(struct pcie_cdev_port *port)
     {
         msc_list = list_entry(head->next, struct pcdev_msc_list, list);
         list_del(&msc_list->list);
-        kfree(msc_list);
+        SAFETYFREE(msc_list);
     }
 
     head = &port->write_buf_head;
@@ -2883,18 +2631,8 @@ static void pcie_cdev_port_close(struct pcie_cdev_port *port)
     INIT_LIST_HEAD(&port->ret_buf_head);
     INIT_LIST_HEAD(&port->read_buf_head);
 
-    if (port->ret_buf_list != NULL)
-    {
-        kfree((void *)port->ret_buf_list);
-        port->ret_buf_list = NULL;
-    }
-
-    if (port->write_buf_list != NULL)
-    {
-        kfree((void *)port->write_buf_list);
-        port->write_buf_list = NULL;
-    }
-
+    SAFETYFREE(port->ret_buf_list);
+    SAFETYFREE(port->write_buf_list);
     port->pstats.openclose = false;
     port->pstats.close_count++;
 
@@ -2902,34 +2640,87 @@ static void pcie_cdev_port_close(struct pcie_cdev_port *port)
     return;
 }
 
-static int pcie_cdev_close(struct inode *inode, struct file *filp)
+int pcie_cdev_close(struct inode *inode, struct file *filp)
 {
     int port_num;
     struct pcie_cdev_port *port = NULL;
+    vcom_data *pdata = filp->private_data;
+
+    // not open, so not need to close
+    if (!pdata || !pdata->ref_count || test_bit(VCOM_STATE_OPEN, &pdata->flag))
+        return 0;
+
     pcie_cdev_read_close(filp);
-    port_num = pcie_cdev_get_port_num(inode);
-    PCDEV_ERR("in port(%d)\n", port_num);
+    port_num = pcie_cdev_get_port_num_by_inode(inode);
+
+    PCDEV_TRACE("in port(%d)\n", port_num);
     if (port_num < 0)
-    {
         return port_num;
-    }
 
     port = g_pcie_cdev_ports[port_num].port;
     if (port == NULL)
-    {
         return -ENODEV;
-    }
 
-    pcie_cdev_port_close(port);
+    // free dma data filed, the last time close
+    if (pdata->ref_count == 0)
+        pcie_cdev_port_close(port);
     return 0;
 }
 
+/**
+ * current not support
+ * fixme: implement it
+ */
+int pcie_cdev_flush(struct file *file, fl_owner_t id)
+{
+    return 0;
+}
+
+/**
+ * current not support
+ * fixme: implement it
+ */
+unsigned int pcie_cdev_poll(struct file *file, struct poll_table_struct *wait)
+{
+    vcom_data *pdata = file->private_data;
+    unsigned int mask = 0;
+
+    PCDEV_LINE;
+    mutex_lock(&pdata->list_lock);
+    if (test_bit(VCOM_STATE_DISCONNET, &pdata->flag))
+    {
+        mask = POLLHUP | POLLERR;
+        mutex_unlock(&pdata->list_lock);
+        goto out;
+    }
+
+    if (test_bit(VCOM_STATE_READABLE, &pdata->flag))
+        mask = POLLIN | POLLRDNORM;
+
+    if (pdata->rerr || pdata->werr)
+        mask |= POLLERR;
+
+    if (!test_bit(VCOM_STATE_BUSY, &pdata->flag))
+        mask |= POLLOUT | POLLWRNORM;
+    mutex_unlock(&pdata->list_lock);
+
+    poll_wait(file, &pdata->wqueue, wait);
+
+out:
+    return mask;
+}
+
 static const struct file_operations g_pcdev_fops = {
+    .owner = THIS_MODULE,
     .read = pcie_cdev_read,
     .write = pcie_cdev_write,
-    .unlocked_ioctl = pcie_cdev_ioctl,
     .open = pcie_cdev_open,
     .release = pcie_cdev_close,
+    .flush = pcie_cdev_flush,
+    .poll = pcie_cdev_poll,
+    .unlocked_ioctl = pcie_cdev_ioctl,
+    .compat_ioctl = pcie_cdev_ioctl,
+    .llseek = noop_llseek,
 };
 
 static int pcie_cdev_alloc_read_buf(struct pcie_cdev_port *port)
@@ -2943,7 +2734,7 @@ static int pcie_cdev_alloc_read_buf(struct pcie_cdev_port *port)
         desc = port->rx_desc + i;
         if (!port->d_vaddr[i])
         {
-            port->d_vaddr[i] = (unsigned long long)(unsigned long)kzalloc(port->rx_buf_max_size, GFP_ATOMIC);
+            port->d_vaddr[i] = (unsigned long long)kzalloc(port->rx_buf_max_size, GFP_ATOMIC);
 
             if (!port->d_vaddr[i])
             {
@@ -2953,9 +2744,7 @@ static int pcie_cdev_alloc_read_buf(struct pcie_cdev_port *port)
         }
         desc->d_vaddr = port->d_vaddr[i];
         if (port->d_vaddr[i] != desc->d_vaddr)
-        {
-            PCDEV_ERR("port->d_vaddr:%lld, desc->d_vaddr :%lld\n", port->d_vaddr[i], desc->d_vaddr);
-        }
+            PCDEV_INFO("port->d_vaddr:%lld, desc->d_vaddr :%lld\n", port->d_vaddr[i], desc->d_vaddr);
 
         d_pbuf = dma_map_single(port->dev, (void *)(unsigned long)port->d_vaddr[i], port->rx_buf_max_size,
                                 DMA_FROM_DEVICE);
@@ -2981,10 +2770,7 @@ static int pcie_cdev_free_read_buf(struct pcie_cdev_port *port)
 
     for (i = 0; i < port->rx_num; i++)
     {
-        if (port->d_vaddr[i])
-        {
-            kfree((void *)(unsigned long)port->d_vaddr[i]);
-        }
+        SAFETYFREE(port->d_vaddr[i]);
         port->d_vaddr[i] = 0;
         port->rx_desc[i].own = 0;
         port->rx_desc[i].d_vaddr = 0;
@@ -3046,30 +2832,22 @@ static void port_pr_clear(struct pcie_cdev_port *port)
     return;
 }
 
+extern struct rc_pcie_info *g_pcie_rc_info;
 int pcie_cdev_port_alloc(unsigned int port_num)
 {
     struct pcie_cdev_port *port = NULL;
-    struct pcdev_ports_desc *ports_desc = NULL;
-
-    PCDEV_TRACE("in\n");
 
     g_pcdev_ctx.ports_desc = (struct pcdev_ports_desc *)g_pcdev_ctx.virt_addr;
-    ports_desc = g_pcdev_ctx.ports_desc;
-    //#ifdef CONFIG_BALONG_PCIE_CDEV_RC
-    ports_desc = (struct pcdev_ports_desc *)g_pcdev_ctx.virt_addr;
-
     if (pcie_cdev_linkdown())
     {
-        PCDEV_ERR("ep ports not allocked \n");
         return -EIO;
     }
 
     if (pcdev_rc_port_desc_match(port_num))
     {
-        PCDEV_ERR("port(%d) desc match fail \n", port_num);
+        PCDEV_ERR("port(%d) desc match fail\n", port_num);
         return -EACCES;
     }
-    //#endif
 
     if (g_pcie_cdev_ports[port_num].is_alloc == 1)
     {
@@ -3080,9 +2858,7 @@ int pcie_cdev_port_alloc(unsigned int port_num)
     {
         port = (struct pcie_cdev_port *)kzalloc(sizeof(struct pcie_cdev_port), GFP_KERNEL);
         if (port == NULL)
-        {
             return -ENOMEM;
-        }
 
         spin_lock_init(&port->port_lock);
 
@@ -3096,14 +2872,17 @@ int pcie_cdev_port_alloc(unsigned int port_num)
 
         port->port_num = port_num;
         port->name = PCIE_CDEV_GET_NAME(port_num);
-        port->dev = &g_pcdev_ctx.pdev->dev;
+        // port->dev = &g_pcdev_ctx.pdev->dev;
+
+        // use device function 0
+        port->dev = &g_pcie_rc_info->balong_multi_ep[0]->dev; // add by lee
+        port->rx_buf_max_size = 1024 * 16;                    // add by lee
 
         g_pcie_cdev_ports[port_num].port = port;
         g_pcie_cdev_ports[port_num].is_alloc = 1;
     }
 
     pcdev_port_init(port);
-
     port_desc_map(port_num, g_pcdev_ctx.work_mode);
     port->local_stat->bits.init = 1;
     return 0;
@@ -3129,9 +2908,7 @@ static int pcie_cdev_register_driver(struct pcie_cdev_driver *driver)
 
     error = alloc_chrdev_region(&dev, driver->minor_start, driver->num, driver->name);
     if (error < 0)
-    {
         return error;
-    }
 
     driver->major = MAJOR(dev);
     driver->minor_start = MINOR(dev);
@@ -3167,6 +2944,7 @@ struct device *pcie_cdev_register_device(struct pcie_cdev_driver *driver, unsign
         PCDEV_ERR("Attempt to register invalid tty line number (%d).\n", index);
         return ERR_PTR(-EINVAL);
     }
+
     ret = snprintf(name, PCIE_CDEV_NAME_MAX - 1, "%s", PCIE_CDEV_GET_NAME(index));
     if (ret < 0)
     {
@@ -3189,17 +2967,14 @@ int pcie_cdev_register_devices(void)
 
     g_pcdev_class = class_create(THIS_MODULE, "g_pcdev_class");
     if (IS_ERR(g_pcdev_class))
-    {
         return PTR_ERR(g_pcdev_class);
-    }
 
     for (i = 0; i < PCIE_CDEV_COUNT; i++)
     {
         /* register devices ... */
         if (!g_pcie_cdev_type_table[i].port_make_device)
-        {
             continue;
-        }
+
         printk(KERN_ERR "driver name:%s\n", g_pcie_cdev_type_table[i].name);
         cdev = pcie_cdev_register_device(g_cdev_driver, i, NULL);
         if (IS_ERR(cdev))
@@ -3272,22 +3047,18 @@ static int pcdev_enmudone_check(void *data)
         }
 
         if (!g_pcie_cdev_type_table[i].port_make_device)
-        {
             continue;
-        }
 
         ret = snprintf_s(pcdev_name, PCIE_CDEV_NAME_MAX - 1, "/dev/%s",
                          g_pcie_cdev_ports[i].port->name);
         if (ret < 0)
-        {
             PCDEV_ERR("snprintf_s fail ret:%d\n", ret);
-        }
 
-        while (sys_access(pcdev_name, O_RDWR))
-        {
-            msleep(100);
-            PCDEV_ERR("port(%d) sleep\n", i);
-        }
+        // while (sys_access(pcdev_name, O_RDWR))
+        // {
+        //     msleep(100);
+        //     PCDEV_ERR("port(%d) sleep\n", i);
+        // }
     }
     set_fs(old_fs);
 
@@ -3295,17 +3066,12 @@ static int pcdev_enmudone_check(void *data)
     return 0;
 }
 
-void pcdev_init(struct work_struct *work)
+void pcdev_initwork_init()
 {
     int ret;
     int i;
 
-    bsp_err("[init]start\n");
     printk(KERN_ERR "[init]start\n");
-#ifdef CONFIG_PCIE_CDEV_ENG
-    bsp_err("[CONFIG_PCIE_CDEV_ENG]yes\n");
-#endif
-
     pcie_cdev_evt_init(&g_pcdev_write_evt_manage, "write_evt");
     pcie_cdev_evt_init(&g_pcdev_read_evt_manage, "read_evt");
     pcie_cdev_evt_init(&g_pcdev_sig_stat_evt_manage, "sig_stat_evt");
@@ -3356,6 +3122,10 @@ void pcdev_init(struct work_struct *work)
         g_pcdev_ctx.irq_table = g_pcdev_intr_table;
     }
 
+    // init per-cdev data field
+    for (i = 0; i < PCIE_CDEV_COUNT; i++)
+        memset_s(&pcie_cdev_read_data_tatol[i], sizeof(vcom_data), 0, sizeof(vcom_data));
+
     if (pcie_cdev_vote(init_mode, PCIE_CDEV_COUNT))
     {
         PCDEV_ERR("pcdev init vote failed\n");
@@ -3370,22 +3140,10 @@ void pcdev_init(struct work_struct *work)
 
     for (i = 0; i < PCIE_CDEV_COUNT; i++)
     {
-        ret = pcie_cdev_port_alloc(i);
-        if (ret)
-        {
-            PCDEV_ERR(" port(%d) %s alloc  fail\n", i, PCIE_CDEV_GET_NAME(i));
-        }
+        if (pcie_cdev_port_alloc(i))
+            PCDEV_ERR("port(%d) %s alloc fail\n", i, PCIE_CDEV_GET_NAME(i));
     }
 
-#ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-    if (g_pcdev_ctx.work_mode == pcie_ep)
-    {
-        spin_lock_init(&g_pcdev_ctx.dma_ctx.dma_lock);
-        spin_lock_init(&g_pcdev_ctx.dma_ctx.dma_lock_rc);
-        INIT_LIST_HEAD(&g_pcdev_ctx.dma_ctx.head);
-        INIT_LIST_HEAD(&g_pcdev_ctx.dma_ctx.head_rc);
-    }
-#endif
 #ifdef CONFIG_PCIE_CDEV_DMA_DOUBLE
     spin_lock_init(&g_pcdev_ctx.dma_ctx.dma_lock);
     INIT_LIST_HEAD(&g_pcdev_ctx.dma_ctx.head);
@@ -3401,6 +3159,8 @@ void pcdev_init(struct work_struct *work)
 
     g_pcdev_ctx.diag_mode = 0;
     g_pcdev_ctx.init_count++;
+
+    // is this check useless??? if this work was meaningful, use linux/completion is much better???
     g_pcdev_enumdone_check = kthread_run(pcdev_enmudone_check, NULL, "PCDEV_ENMU_CHECK");
 
     pcie_cdev_unvote(init_mode, PCIE_CDEV_COUNT);
@@ -3410,28 +3170,28 @@ void pcdev_init(struct work_struct *work)
 
 PRB_ERROR3:
     pcie_cdev_unvote(init_mode, PCIE_CDEV_COUNT);
+
 PRB_ERROR2:
     pcie_cdev_unregister_devices();
+
 PRB_ERROR1:
     pcie_cdev_unregister_driver(g_cdev_driver);
+
 PRB_ERROR0:
     if (g_cdev_driver->pcdev_work_queue != NULL)
-    {
         destroy_workqueue(g_cdev_driver->pcdev_work_queue);
-    }
-    kfree(g_cdev_driver);
-    g_cdev_driver = NULL;
 
+    SAFETYFREE(g_cdev_driver);
     return;
 }
 
 static void pcie_dma_free(void)
 {
+#ifdef CONFIG_PCIE_CDEV_DMA_DOUBLE
     struct list_head *head = NULL;
     struct pcie_cdev_dma_list *list = NULL;
     unsigned long dma_flags;
 
-#ifdef CONFIG_PCIE_CDEV_DMA_DOUBLE
     head = &g_pcdev_ctx.dma_ctx.head;
     spin_lock_irqsave(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
     while (!list_empty(head))
@@ -3442,31 +3202,6 @@ static void pcie_dma_free(void)
     }
     spin_unlock_irqrestore(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
 #endif
-
-#ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-    if (g_pcdev_ctx.work_mode == pcie_ep)
-    {
-        head = &g_pcdev_ctx.dma_ctx.head;
-        spin_lock_irqsave(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
-        while (!list_empty(head))
-        {
-            list = list_entry(head->next, struct pcie_cdev_dma_list, list);
-            list_del(&list->list);
-            g_pcdev_ctx.dma_ctx.kick_dma_trans_fail++;
-        }
-        spin_unlock_irqrestore(&g_pcdev_ctx.dma_ctx.dma_lock, dma_flags);
-
-        head = &g_pcdev_ctx.dma_ctx.head_rc;
-        spin_lock_irqsave(&g_pcdev_ctx.dma_ctx.dma_lock_rc, dma_flags);
-        while (!list_empty(head))
-        {
-            list = list_entry(head->next, struct pcie_cdev_dma_list, list);
-            list_del(&list->list);
-            g_pcdev_ctx.dma_ctx.kick_dma_trans_fail_rc++;
-        }
-        spin_unlock_irqrestore(&g_pcdev_ctx.dma_ctx.dma_lock_rc, dma_flags);
-    }
-#endif
 }
 
 void pcdev_exit(void)
@@ -3474,11 +3209,9 @@ void pcdev_exit(void)
     int i;
     struct pcie_cdev_port *port = NULL;
 
-    PCDEV_ERR("in\n");
+    PCDEV_TRACE("in\n");
     if (g_pcdev_ctx.exit_count >= g_pcdev_ctx.init_count)
-    {
         return;
-    }
 
     g_pcdev_ctx.exit_count++;
 
@@ -3486,9 +3219,8 @@ void pcdev_exit(void)
     {
         port = g_pcie_cdev_ports[i].port;
         if (port == NULL)
-        {
             continue;
-        }
+
         pcie_cdev_port_exit(port);
     }
 
@@ -3496,32 +3228,12 @@ void pcdev_exit(void)
 
     pcie_dma_free();
     if (g_pcdev_ctx.pcdev_hw_exit != NULL)
-    {
         g_pcdev_ctx.pcdev_hw_exit();
-    }
-}
-
-int pcdev_initwork_init(void)
-{
-    g_pcdev_ctx.pcdev_init_work_queue = create_singlethread_workqueue("pcie_cdev_init");
-    if (g_pcdev_ctx.pcdev_init_work_queue == NULL)
-    {
-        return -ENOMEM;
-    }
-
-    INIT_DELAYED_WORK(&g_pcdev_init_work, pcdev_init);
-    return 0;
 }
 
 int pcdev_init_cb(void)
 {
     PCDEV_TRACE("in\n");
-    if (g_pcdev_ctx.pcdev_init_work_queue == NULL)
-    {
-        PCDEV_ERR("pcdev_init_work_queue is NULL\n");
-        return -ENOMEM;
-    }
-    queue_delayed_work(g_pcdev_ctx.pcdev_init_work_queue, &g_pcdev_init_work, 0);
     return 0;
 }
 
@@ -3533,11 +3245,9 @@ static void pcdev_dump_hook(void)
     int ret;
 
     if (g_pcdev_dump == NULL)
-    {
         return;
-    }
 
-    if (g_pcdev_ctx.work_mode == pcie_rc)
+    if (g_pcdev_ctx.work_mode == PCIE_WORK_MODE_RC)
     {
         for (i = 0; i < PCIE_CDEV_COUNT; i++)
         {
@@ -3553,9 +3263,7 @@ static void pcdev_dump_hook(void)
     ret = memcpy_s(g_pcdev_dump->vote_dbg, sizeof(g_pcdev_dump->vote_dbg), g_pcdev_ctx.vote_dbg,
                    sizeof(struct pcdev_vote_dbg_s) * (PCIE_CDEV_COUNT + 1));
     if (ret)
-    {
         PCDEV_ERR("dump memset_s fail\n");
-    }
 
     for (i = 0; i < PCIE_CDEV_COUNT; i++)
     {
@@ -3569,35 +3277,6 @@ static void pcdev_dump_hook(void)
 
         port_info->port_start = PCIE_DUMP_PORT_MARK;
         port_info->port_num = port->port_num;
-        if (g_pcdev_ctx.work_mode == pcie_ep)
-        {
-            port_info->local_stat.u32 = port->local_stat->u32;
-            port_info->remote_stat.u32 = port->remote_stat->u32;
-            port_info->dmamap_skip = port->dmamap_skip;
-
-            port_info->rx_wp = *port->rx_wp;
-            port_info->rx_rp = *port->rx_rp;
-            port_info->rx_rp_toget = port->rx_rp_toget;
-            port_info->rx_rp_process = port->rx_rp_process;
-            port_info->rx_buf_max_size = port->rx_buf_max_size;
-            port_info->rx_num = port->rx_num;
-
-            port_info->tx_wp = *port->tx_wp;
-            port_info->tx_rp = *port->tx_rp;
-            port_info->tx_rp_todo = *port->tx_rp_todo;
-            port_info->tx_rp_complete = port->tx_rp_complete;
-            port_info->tx_buf_max_sz = *port->tx_buf_max_sz;
-            port_info->tx_num = port->tx_num;
-            port_info->write_sync = port->write_sync;
-            port_info->write_blocked = port->write_blocked;
-#ifdef CONFIG_PCIE_CDEV_DMA_SINGLE
-            port_info->tx_rp_todo_rc = *port->tx_rp_todo_rc;
-            port_info->tx_rp_dma_cmp_rc = *port->tx_rp_dma_cmp_rc;
-            port_info->tx_rp_dma_cfg_rc = port->tx_rp_dma_cfg_rc;
-            port_info->tx_rp_cmp = port->tx_rp_cmp;
-#endif
-        }
-
         port_info->open_count = (unsigned int)port->pstats.open_count;
         port_info->close_count = (unsigned int)port->pstats.close_count;
         port_info->close_count_repeat = (unsigned int)port->pstats.close_count_repeat;
@@ -3663,20 +3342,15 @@ void pcdev_dump_init(void)
                                                                       PCIE_CDEV_DUMP_SIZE, 0);
     if (NULL == g_pcdev_dump)
     {
-        PCDEV_ERR("dump mem alloc fail\n");
+        PCDEV_ERR("dump mem alloc fail(ignore this error, for not complement)\n");
         return;
     }
-    ret = (int)memset_s(g_pcdev_dump, PCIE_CDEV_DUMP_SIZE, 0, PCIE_CDEV_DUMP_SIZE);
-    if (ret)
-    {
-        PCDEV_ERR("dump memset_s fail\n");
-    }
+
+    (int)memset_s(g_pcdev_dump, PCIE_CDEV_DUMP_SIZE, 0, PCIE_CDEV_DUMP_SIZE);
 
     ret = bsp_dump_register_hook("PCDEV", pcdev_dump_hook);
     if (ret == BSP_ERROR)
-    {
         PCDEV_ERR("register om fail\n");
-    }
 }
 
 int pcdev_hids_cb(struct pcdev_hids_report *report)
@@ -3688,9 +3362,8 @@ int pcdev_hids_cb(struct pcdev_hids_report *report)
     for (i = 0; i < PCIE_CDEV_COUNT; i++)
     {
         if (g_pcie_cdev_ports[i].port == NULL)
-        {
             continue;
-        }
+
         s_report = &report->pcdev_port_hids[i];
         pstats = &g_pcie_cdev_ports[i].port->pstats;
         s_report->tx_packets_fail = pstats->tx_packets_fail;
@@ -3700,9 +3373,7 @@ int pcdev_hids_cb(struct pcdev_hids_report *report)
             ret = memcpy_s(report->diag_timestamp, sizeof(struct pcdev_port_timestamp) * PCDEV_TIMESTAMP_COUNT,
                            g_pcie_cdev_ports[i].port->timestamp, sizeof(struct pcdev_port_timestamp) * PCDEV_TIMESTAMP_COUNT);
             if (ret)
-            {
                 PCDEV_ERR("memset_s fail\n");
-            }
         }
 
         s_report->tx_packets = pstats->tx_packets;

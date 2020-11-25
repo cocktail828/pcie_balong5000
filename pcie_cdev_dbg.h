@@ -45,14 +45,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
 #ifndef __PCIE_CDEV_DBG_H__
 #define __PCIE_CDEV_DBG_H__
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #include <linux/kernel.h>
 #include "bsp_print.h"
@@ -62,107 +56,51 @@ extern "C"
 
 #define THIS_MODU mod_pcdev
 
-/* gcdev msg level */
+extern struct pcdev_ctx g_pcdev_ctx;
+
+/* pcdev msg level */
 #define PCDEV_LEVEL_ERR BIT(0)
-#define PCDEV_LEVEL_WARNING BIT(1)
+#define PCDEV_LEVEL_WARN BIT(1)
 #define PCDEV_LEVEL_TRACE BIT(2)
 #define PCDEV_LEVEL_INFO BIT(3)
-#define PCDEV_LEVEL_PKT_DBG BIT(4)
+#define PCDEV_LEVEL_DBG BIT(4)
 
-    extern struct pcdev_ctx g_pcdev_ctx;
-
-#define PCDEV_ERR(fmt, ...)                               \
-    do                                                    \
-    {                                                     \
-        if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_ERR)      \
-            bsp_err("<%s>" fmt, __func__, ##__VA_ARGS__); \
+#define PCDEV_SHOW(level, fmt, ...)                                                  \
+    do                                                                               \
+    {                                                                                \
+        if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_ERR)                                 \
+            printk(KERN_ERR "[%d] %s: " fmt, __LINE__, __func__, ##__VA_ARGS__);     \
+        else if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_WARN)                           \
+            printk(KERN_WARNING "[%d] %s: " fmt, __LINE__, __func__, ##__VA_ARGS__); \
+        else if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_TRACE)                          \
+            printk(KERN_NOTICE "[%d] %s: " fmt, __LINE__, __func__, ##__VA_ARGS__);  \
+        else if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_INFO)                           \
+            printk(KERN_INFO "[%d] %s: " fmt, __LINE__, __func__, ##__VA_ARGS__);    \
+        else if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_DBG)                            \
+            printk(KERN_DEBUG "[%d] %s: " fmt, __LINE__, __func__, ##__VA_ARGS__);   \
     } while (0)
 
-#ifdef CONFIG_PCDEV_DEBUG
-#define PCDEV_WARNING(fmt, ...)                           \
-    do                                                    \
-    {                                                     \
-        if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_WARNING)  \
-            bsp_err("<%s>" fmt, __func__, ##__VA_ARGS__); \
+#define PCDEV_ERR(fmt, ...) PCDEV_SHOW(PCDEV_LEVEL_ERR, fmt, ##__VA_ARGS__)
+#define PCDEV_WARN(fmt, ...) PCDEV_SHOW(PCDEV_LEVEL_WARN, fmt, ##__VA_ARGS__)
+#define PCDEV_TRACE(fmt, ...) PCDEV_SHOW(PCDEV_LEVEL_TRACE, fmt, ##__VA_ARGS__)
+#define PCDEV_INFO(fmt, ...) PCDEV_SHOW(PCDEV_LEVEL_INFO, fmt, ##__VA_ARGS__)
+
+#define PCDEV_LINE PCDEV_TRACE("PCDEV_LINE\n")
+
+#define print_pkt(_pnum, _buf, _len)                                                                                                            \
+    do                                                                                                                                          \
+    {                                                                                                                                           \
+        int j, count;                                                                                                                           \
+        static char buf[512];                                                                                                                   \
+        count = _len > 64 ? 64 : _len;                                                                                                          \
+        snprintf(buf, sizeof(buf), "buf addr: 0x%lx, len: %d, port %d\n", (uintptr_t)_buf, (int)_len, _pnum);                                   \
+                                                                                                                                                \
+        for (j = 0; j < count; j += 16)                                                                                                         \
+            snprintf(buf + strlen(buf), sizeof(buf), "%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", \
+                     j, _buf[j], _buf[j + 1], _buf[j + 2], _buf[j + 3], _buf[j + 4], _buf[j + 5], _buf[j + 6],                                  \
+                     _buf[j + 7], _buf[j + 8], _buf[j + 9], _buf[j + 0xa], _buf[j + 0xb], _buf[j + 0xc],                                        \
+                     _buf[j + 0xd], _buf[j + 0xe], _buf[j + 0xf]);                                                                              \
+        PCDEV_TRACE("%s", buf);                                                                                                                 \
     } while (0)
-#define PCDEV_TRACE(fmt, ...)                             \
-    do                                                    \
-    {                                                     \
-        if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_TRACE)    \
-            bsp_err("<%s>" fmt, __func__, ##__VA_ARGS__); \
-    } while (0)
-#define PCDEV_INFO(port_num, fmt, ...)                                           \
-    if ((g_pcdev_ctx.print_port & (1 << port_num)))                              \
-    {                                                                            \
-        unsigned long long curtime;                                              \
-        g_pcdev_ctx.get_curtime(&curtime);                                       \
-        do                                                                       \
-        {                                                                        \
-            if (g_pcdev_ctx.msg_level & PCDEV_LEVEL_INFO)                        \
-                bsp_info("<%s>:<0x%lld>" fmt, __func__, curtime, ##__VA_ARGS__); \
-        } while (0);                                                             \
-    }
 
-    static inline void print_pkt(unsigned int port_num, unsigned char *buf, int len)
-    {
-        int j, count;
-
-        /*if (!(g_pcdev_ctx.msg_level & PCDEV_LEVEL_PKT_DBG)) {
-        return;
-    }
-
-    if (!(g_pcdev_ctx.print_port & (1 << port_num))) {
-        return;
-    }*/
-
-        count = len > 64 ? 64 : len;
-        printk(KERN_ERR "[pcdev]buf addr: 0x%llx  len: %d\n", (uintptr_t)buf, len);
-        for (j = 0; j < count; j += 16)
-        {
-            printk(KERN_ERR "%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", j, buf[j],
-                   buf[j + 1], buf[j + 2], buf[j + 3], buf[j + 4], buf[j + 5], buf[j + 6], buf[j + 7], buf[j + 8],
-                   buf[j + 9], buf[j + 0xa], buf[j + 0xb], buf[j + 0xc], buf[j + 0xd], buf[j + 0xe], buf[j + 0xf]);
-        }
-        printk(KERN_ERR "\n");
-    }
-
-#else /* CONFIG_PCDEV_DEBUG */
-#define PCDEV_WARNING(fmt, ...)
-#define PCDEV_TRACE(fmt, ...)
-#define PCDEV_INFO(fmt, ...)
-
-static inline void print_pkt(unsigned int port_num, unsigned char *buf, int len)
-{
-    return;
-}
-#endif /* CONFIG_PCDEV_DEBUG */
-
-    void pcdev_dbg_timer_start(void);
-
-    static inline void print_pkt1(unsigned int port_num, unsigned char *buf, int len)
-    {
-        int count;
-
-        /*if (!(g_pcdev_ctx.msg_level & PCDEV_LEVEL_PKT_DBG)) {
-        return;
-    }
-
-    if (!(g_pcdev_ctx.print_port & (1 << port_num))) {
-        return;
-    }*/
-
-        count = len > 64 ? 64 : len;
-        printk(KERN_ERR "[pcdev]buf addr: 0x%lx  len: %d\n", (uintptr_t)buf, len);
-        printk(KERN_ERR "[pcdev]recv message: %s\n", buf);
-        /*for (j = 0; j < count; j += 16) {
-        printk(KERN_ERR"%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", j, buf[j],
-               buf[j + 1], buf[j + 2], buf[j + 3], buf[j + 4], buf[j + 5], buf[j + 6], buf[j + 7], buf[j + 8],
-               buf[j + 9], buf[j + 0xa], buf[j + 0xb], buf[j + 0xc], buf[j + 0xd], buf[j + 0xe], buf[j + 0xf]);
-    }
-    printk(KERN_ERR"\n");*/
-    }
-
-#ifdef __cplusplus
-}
-#endif
 #endif

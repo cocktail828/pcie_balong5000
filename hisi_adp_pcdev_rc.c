@@ -165,7 +165,7 @@ void *bsp_pcdev_open(u32 dev_id)
     {
         g_adp_pcdev_ctx[dev_id].stat.stat_open_err++;
         g_adp_pcdev_ctx[dev_id].stat.stat_open_last_err = filp;
-        printk("[%s:%d]mhwpcie:open err:%d\n", __func__, __LINE__, filp);
+        printk("[%s:%d] mhwpcie:open err\n", __func__, __LINE__);
         return NULL;
     }
     filp->private_data = &g_adp_pcdev_ctx[dev_id];
@@ -294,7 +294,7 @@ int bsp_pcdev_ioctl(void *handle, u32 cmd, void *para)
     struct file *filp = (struct file *)handle;
     struct adp_pcdev_context *ctx = NULL;
     struct files_struct *files = NULL;
-    int status;
+    int status = 0;
 
     if (unlikely(ADP_PCDEV_FILP_INVALID(filp)))
     {

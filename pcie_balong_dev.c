@@ -122,7 +122,8 @@ MODULE_DEVICE_TABLE(pci, g_pcie_balong_dev_table);
 int memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
 {
     unsigned int size_tmp = min(destMax, count);
-    if (!dest || !src)
+
+    if (unlikely(size_tmp < 0) || !dest || !src)
         return -1;
 
     memcpy(dest, src, size_tmp);
@@ -133,7 +134,8 @@ EXPORT_SYMBOL(memcpy_s);
 int memset_s(void *dest, size_t destMax, const void *src, size_t count)
 {
     unsigned int size_tmp = min(destMax, count);
-    if (!dest)
+
+    if (unlikely(size_tmp < 0) || !dest)
         return -1;
 
     memset(dest, 0, size_tmp);
@@ -141,25 +143,22 @@ int memset_s(void *dest, size_t destMax, const void *src, size_t count)
 }
 EXPORT_SYMBOL(memset_s);
 
+#define BUF_SIZE 1024
+static char print_buffer[BUF_SIZE] = {'\0'};
 void bsp_print(module_tag_e modid, enum bsp_log_level level, char *fmt, ...)
 {
-    char print_buffer[1024] = {
-        '\0',
-    };
     va_list arglist;
-
     va_start(arglist, fmt);
-    (void)vsnprintf(print_buffer, (1024 - 1), fmt, arglist); /* unsafe_function_ignore: vsnprintf */
+    (void)vsnprintf(print_buffer, (BUF_SIZE - 1), fmt, arglist); /* unsafe_function_ignore: vsnprintf */
     va_end(arglist);
-    print_buffer[1024 - 1] = '\0';
-
+    print_buffer[BUF_SIZE - 1] = '\0';
     (void)printk(KERN_ERR "%s", print_buffer);
 }
 EXPORT_SYMBOL(bsp_print);
 
 int pcie_balong_dev_probe(struct pci_dev *dev, const struct pci_device_id *id)
 {
-    PCIE_RC_PR_ERR("%s start:ep id[%d] addr:%llx", __func__, dev->devfn, pci_resource_start(dev, 0));
+    PCIE_RC_PR_ERR("start:ep id[%d], addr: %lx", dev->devfn, (unsigned long int)pci_resource_start(dev, 0));
     g_pcie_rc_info->balong_multi_ep[dev->devfn] = dev;
     g_pcie_rc_info->valid_ep_func_num++;
 
@@ -397,7 +396,8 @@ void pcie_rc_record_bar_info(void)
             ep_bar_pci_addr = pci_resource_start(g_pcie_rc_info->balong_multi_ep[func_num], in_func_bar_id);
             ep_bar_size = pci_resource_len(g_pcie_rc_info->balong_multi_ep[func_num], in_func_bar_id);
             pcie_bar_dbg(bar_index, ep_bar_size, ep_bar_pci_addr);
-            PCIE_RC_PR_ERR("%s id[%d]:ep_bar_pci_addr:%lx,ep_bar_size:%lx", __func__, func_num, ep_bar_pci_addr, ep_bar_size);
+            if (ep_bar_pci_addr && ep_bar_size)
+                PCIE_RC_PR_ERR("id %d, ep_bar_pci_addr %lx, ep_bar_size %lx", func_num, ep_bar_pci_addr, ep_bar_size);
         }
         bar_index++;
     }
@@ -413,10 +413,11 @@ void *rc_get_normal_bar_virt_addr(enum pcie_bar_id_e bar_index)
     bar_size = bsp_pcie_rc_get_bar_size(bar_index);
     if (!bar_pci_addr || !bar_size)
     {
-        PCIE_RC_PR_ERR("bar index %d , get bar resource fail", bar_index);
+        PCIE_RC_PR_ERR("bar index %d, get bar resource fail", bar_index);
         return NULL;
     }
-    PCIE_RC_PR_ERR("bar index %d , get bar resource addr:%lx,len:%lx", bar_index, bar_pci_addr, bar_size);
+
+    PCIE_RC_PR_ERR("bar index %d, get bar resource addr:%lx, len:%lx", bar_index, bar_pci_addr, bar_size);
     bar_virt_addr = ioremap_wc(bar_pci_addr, bar_size);
     if (bar_virt_addr == NULL)
     {
@@ -844,6 +845,7 @@ int bsp_pcie_rc_send_msi(enum pcie_rc_to_ep_msi_id id)
 
     if (g_pcie_rc_flag.remove_start || g_pcie_rc_flag.linkdown_detect)
     {
+        PCIE_RC_PR_ERR("g_pcie_rc_flag -> remove_start == 1 or linkdown_detect == 1\n");
         return -1;
     }
 

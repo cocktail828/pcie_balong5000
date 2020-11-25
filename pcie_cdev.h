@@ -79,12 +79,6 @@ extern "C"
 #define VOTE_FLAG 0x1221
 #define PCIE_CDEV_DUMP_SIZE 0x2000
 
-    enum pcie_cdev_mode
-    {
-        pcie_ep = 0,
-        pcie_rc = 4,
-    };
-
     enum pcie_cdev_vote_mode
     {
         notify_cb = 0,
@@ -488,13 +482,21 @@ extern "C"
         spinlock_t evt_lock;
     };
 
-    int pcdev_initwork_init(void);
+    void pcdev_initwork_init(void);
     int pcdev_init_cb(void);
     void pcdev_exit(void);
     long pcie_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
     ssize_t pcie_cdev_read(struct file *file, char __user *buf, size_t count, loff_t *ppos);
     ssize_t pcie_cdev_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos);
     void pcdev_dump_init(void);
+
+#define SAFETYFREE(v)         \
+    do                        \
+    {                         \
+        if (v)                \
+            kfree((void *)v); \
+        v = 0;                \
+    } while (0);
 
 #ifdef __cplusplus
 }

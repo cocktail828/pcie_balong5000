@@ -6,6 +6,7 @@
 #include <linux/syscore_ops.h>
 #include "securec.h"
 #include "pcie_cdev.h"
+#include "pcie_cdev_desc.h"
 #include "pcie_cdev_rc.h"
 #include "pcie_cdev_dbg.h"
 
@@ -23,14 +24,16 @@ void pcdev_vote_dbg(void)
     int i;
     for (i = 0; i < vote_modem_bottom; i++)
     {
-        PCDEV_ERR("mode(%d) vote_cnt:%d, fail_cnt:%d, unvote_cnt:%d\n", i, atomic_read(&g_pcdev_vote_cnt[i]),
-                  atomic_read(&g_pcdev_vote_fail_cnt[i]), atomic_read(&g_pcdev_unvote_cnt[i]));
+        PCDEV_ERR("mode(%d) vote_cnt:%d, fail_cnt:%d, unvote_cnt:%d\n",
+                  i, atomic_read(&g_pcdev_vote_cnt[i]),
+                  atomic_read(&g_pcdev_vote_fail_cnt[i]),
+                  atomic_read(&g_pcdev_unvote_cnt[i]));
     }
 }
 
 static int pcie_cdev_vote_lock_rc(int mode)
 {
-    int ret;
+    int ret = 0;
 
     if (in_interrupt())
     {
@@ -41,10 +44,9 @@ static int pcie_cdev_vote_lock_rc(int mode)
     }
 
     atomic_inc(&g_pcdev_vote_cnt[mode]);
-    /*ret = bsp_pcie_rc_vote_lock(PCIE_USER_CHAR_DEV, 1);
-    if (ret) {
-        atomic_inc(&g_pcdev_vote_fail_cnt[mode]);
-    }*/
+    // if (bsp_pcie_rc_vote_lock(PCIE_USER_CHAR_DEV, 1))
+    //     atomic_inc(&g_pcdev_vote_fail_cnt[mode]);
+
     return ret;
 }
 
@@ -52,48 +54,44 @@ static int pcie_cdev_vote_unlock_rc(int mode)
 {
     atomic_inc(&g_pcdev_unvote_cnt[mode]);
     //return bsp_pcie_rc_vote_unlock(PCIE_USER_CHAR_DEV);
+    return 0; // add by lee
 }
 
 static int pcie_cdev_vote_try_lock_rc(int mode)
 {
     int ret;
+
     atomic_inc(&g_pcdev_vote_cnt[mode]);
     ret = bsp_pcie_rc_vote_lock(PCIE_USER_CHAR_DEV, 0);
     if (ret)
-    {
         atomic_inc(&g_pcdev_vote_fail_cnt[mode]);
-    }
+
     return ret;
 }
 
 int pcdev_rc_port_desc_match(unsigned int port_n)
 {
+    unsigned int i;
     union pcie_cdev_map *desc = NULL;
     union pcie_cdev_map *desc_addr = NULL;
     struct pcdev_ports_desc *ports_desc = (struct pcdev_ports_desc *)g_pcdev_ctx.virt_addr;
-    unsigned int i;
     unsigned int port_num = ports_desc->port_num;
-    //printk("[%s:%d]mhwpcie:rc\n",__func__,__LINE__);
-    //printk("[%s:%d]mhwpcie:rc:virt_addr:%p\n",__func__,__LINE__,g_pcdev_ctx.virt_addr);
-    //printk("[%s:%d]mhwpcie:rc:ports_desc:%p\n",__func__,__LINE__,ports_desc);
+
     desc_addr = (union pcie_cdev_map *)(g_pcdev_ctx.virt_addr + sizeof(struct pcdev_ports_desc));
-    //printk("[%s:%d]mhwpcie:rc:desc_addr:%p\n",__func__,__LINE__,desc_addr);
     for (i = 0; i < port_num; i++)
     {
         desc = desc_addr + i;
 
         if (desc->rc.port_id == g_pcie_cdev_type_table[port_n].type)
         {
-            printk("[%s:%d]mhwpcie:rc:desc:%p\n", __func__, __LINE__, desc);
+            PCDEV_INFO("mhwpcie:rc:desc: %p\n", desc);
             g_pcie_cdev_ports[port_n].desc = desc;
             break;
         }
     }
 
     if (i >= ports_desc->port_num)
-    {
         return -EACCES;
-    }
 
     return 0;
 }
@@ -114,32 +112,32 @@ static int pcie_cdev_rc_init(void)
     int ret;
 
     PCDEV_TRACE("in\n");
-    printk(KERN_ERR "in\n");
-
     g_pcdev_ctx.phys_addr = (void *)bsp_pcie_rc_get_bar_addr(PCIE_BAR_CHAR_DEV);
     if (g_pcdev_ctx.phys_addr == NULL)
     {
         PCDEV_ERR("cannot resource\n");
-        ret = -ENODEV;
-        return ret;
+        return -ENODEV;
     }
 
     g_pcdev_ctx.buffer_size = bsp_pcie_rc_get_bar_size(PCIE_BAR_CHAR_DEV);
     if (g_pcdev_ctx.buffer_size < MIN_IO_SIZE)
     {
         PCDEV_ERR("Invalid PCI region size, aborting\n");
-        ret = -ENODEV;
-        return ret;
+        return -ENODEV;
     }
-    printk("[%s:%d]mhwpcie:rc:PCIE_BAR_CHAR_DEV phys_add:%p,size:%lx\n", __func__, __LINE__, g_pcdev_ctx.phys_addr, g_pcdev_ctx.buffer_size);
-    g_pcdev_ctx.virt_addr = ioremap((unsigned long)g_pcdev_ctx.phys_addr, g_pcdev_ctx.buffer_size);
+
+    PCDEV_TRACE("mhwpcie:rc:PCIE_BAR_CHAR_DEV phys_add:%p,size:%lx\n",
+                g_pcdev_ctx.phys_addr, g_pcdev_ctx.buffer_size);
+
+    g_pcdev_ctx.virt_addr = ioremap((unsigned long)g_pcdev_ctx.phys_addr,
+                                    g_pcdev_ctx.buffer_size);
     if (g_pcdev_ctx.virt_addr == NULL)
     {
         PCDEV_ERR("cannot map\n");
-        ret = -ENODEV;
-        return ret;
+        return -ENODEV;
     }
-    printk("[%s:%d]mhwpcie:rc:PCIE_BAR_CHAR_DEV virt_addr:%p", __func__, __LINE__, g_pcdev_ctx.virt_addr);
+
+    PCDEV_TRACE("mhwpcie:rc:PCIE_BAR_CHAR_DEV virt_addr:%p", g_pcdev_ctx.virt_addr);
     ret = bsp_pcie_rc_msi_request(PCIE_EP_MSI_CHAR_DEV, pcie_cdev_irq_handler_rc,
                                   g_pcdev_rc_irq_name, NULL);
     if (ret)
@@ -153,8 +151,7 @@ static int pcie_cdev_rc_init(void)
     if (ret)
     {
         PCDEV_ERR("irq enable fail\n");
-        ret = -ENODEV;
-        return ret;
+        return -ENODEV;
     }
 
     g_pcdev_ctx.send_irq = pcie_cdev_send_irq_rc;
@@ -170,14 +167,13 @@ static void pcie_cdev_rc_exit(void)
 
     bsp_pcie_rc_msi_free(PCIE_EP_MSI_CHAR_DEV);
     if (g_pcdev_ctx.virt_addr != NULL)
-    {
         iounmap(g_pcdev_ctx.virt_addr);
-    }
+
     g_pcdev_ctx.phys_addr = 0;
     g_pcdev_ctx.buffer_size = 0;
     g_pcdev_ctx.virt_addr = 0;
 
-    PCDEV_TRACE("finish \n");
+    PCDEV_TRACE("finish\n");
     return;
 }
 
@@ -186,6 +182,7 @@ static int pcdev_pltform_probe(struct platform_device *pdev)
     PCDEV_TRACE("in\n");
     dma_set_mask_and_coherent(&pdev->dev, g_pcdev_dma_mask);
     g_pcdev_ctx.pdev = pdev;
+
     return 0;
 }
 
@@ -201,9 +198,9 @@ static struct platform_driver g_pcdev_pltfm_driver = {
         .of_match_table = g_pcdev_match,
     },
 };
-#define print_buff_size 200
-static char g_pmprint_buf[print_buff_size];
 
+#define print_buff_size 1024
+static char g_pmprint_buf[print_buff_size];
 static int pcie_cdev_rc_cb(u32 usr_id, u32 cb_id, void *callback_args)
 {
     int ret = 0;
@@ -221,45 +218,47 @@ static int pcie_cdev_rc_cb(u32 usr_id, u32 cb_id, void *callback_args)
         }
         ret = pcdev_init_cb();
         break;
+
     case PCIE_RC_CB_SUSPEND:
-        ret = memset_s(g_pmprint_buf, print_buff_size, 0, print_buff_size);
-        if (ret)
-        {
-            PCDEV_ERR("memset_s failed, line: %d \n", __LINE__);
-        }
-        cnt += snprintf_s((char *)g_pmprint_buf, (size_t)(print_buff_size - 1),
+        memset_s(g_pmprint_buf, print_buff_size, 0, print_buff_size);
+
+        cnt += snprintf_s((char *)g_pmprint_buf,
+                          (size_t)(print_buff_size - 1),
                           "[C SR][PCDEV]( up )vote port:");
         for (i = 0; i < PCIE_CDEV_COUNT; i++)
         {
             cnt += snprintf_s((char *)g_pmprint_buf + cnt,
-                              (size_t)(print_buff_size - cnt - 1), "[%d]:%lld, ", i,
+                              (size_t)(print_buff_size - cnt - 1),
+                              "[%d]:%lld, ", i,
                               g_pcdev_ctx.vote_dbg[i].vote_port);
         }
         cnt += snprintf_s((char *)g_pmprint_buf + cnt,
                           (size_t)(print_buff_size - cnt - 1), "\n");
-        printk(KERN_INFO "%s", g_pmprint_buf);
+        PCDEV_INFO("%s\n", g_pmprint_buf);
         break;
+
     case PCIE_RC_CB_RESUME:
-        ret = memset_s(g_pmprint_buf, print_buff_size, 0, print_buff_size);
-        if (ret)
-        {
-            PCDEV_ERR("memset_s failed, line: %d \n", __LINE__);
-        }
-        cnt += snprintf_s((char *)g_pmprint_buf, (size_t)(print_buff_size - 1),
+        memset_s(g_pmprint_buf, print_buff_size, 0, print_buff_size);
+
+        cnt += snprintf_s((char *)g_pmprint_buf,
+                          (size_t)(print_buff_size - 1),
                           "[C SR][PCDEV](down)vote port:");
         for (i = 0; i < PCIE_CDEV_COUNT; i++)
         {
             cnt += snprintf_s((char *)g_pmprint_buf + cnt,
-                              (size_t)(print_buff_size - cnt - 1), "[%d]:%lld, ", i,
+                              (size_t)(print_buff_size - cnt - 1),
+                              "[%d]:%lld, ", i,
                               g_pcdev_ctx.vote_dbg[i].vote_port);
         }
         cnt += snprintf_s((char *)g_pmprint_buf + cnt,
                           (size_t)(print_buff_size - cnt - 1), "\n");
-        printk(KERN_INFO "%s", g_pmprint_buf);
+        PCDEV_INFO("%s", g_pmprint_buf);
         break;
+
     case PCIE_RC_CB_EXIT:
         pcdev_exit();
         break;
+
     default:
         break;
     }
@@ -284,35 +283,31 @@ static struct syscore_ops g_pcdev_ops = {
 
 void pcdev_bsp_slice_getcurtime(u64 *pcurtime)
 {
-    int ret;
-    ret = bsp_slice_getcurtime(pcurtime);
-    if (ret)
-    {
+    if (bsp_slice_getcurtime(pcurtime))
         PCDEV_ERR("bsp_slice_getcurtime err\n");
-    }
+
     return;
 }
-void mytimer_init(void);
 
 int pcie_cdev_platform_rc_init(void)
 {
     int ret = 0;
     struct pcie_callback_info pcie_cdev_callback_info = {0};
+
     printk(KERN_ERR "[pcdev]pcie_cdev_platform_rc_init in\n");
-    ret = memset_s(g_pcie_cdev_ports, sizeof(g_pcie_cdev_ports), 0,
-                   sizeof(struct pcie_cdev_port_manager) * PCIE_CDEV_COUNT);
-    if (ret)
-    {
-        PCDEV_ERR("memset_s failed, line: %d \n", __LINE__);
-    }
-    ret = memset_s(&g_pcdev_ctx, sizeof(g_pcdev_ctx), 0, sizeof(struct pcdev_ctx));
-    if (ret)
-    {
-        PCDEV_ERR("memset_s failed, line: %d \n", __LINE__);
-    }
-    g_pcdev_ctx.work_mode = pcie_rc;
+
+    memset_s(g_pcie_cdev_ports, sizeof(g_pcie_cdev_ports), 0,
+             sizeof(struct pcie_cdev_port) * PCIE_CDEV_COUNT);
+
+    memset_s(&g_pcdev_ctx, sizeof(g_pcdev_ctx), 0, sizeof(struct pcdev_ctx));
+
+    g_pcdev_ctx.work_mode = PCIE_WORK_MODE_RC;
     g_pcdev_ctx.pcie_id = 0;
-    g_pcdev_ctx.msg_level = PCDEV_LEVEL_ERR | PCDEV_LEVEL_INFO;
+    g_pcdev_ctx.msg_level = PCDEV_LEVEL_ERR ||
+                            PCDEV_LEVEL_WARN ||
+                            PCDEV_LEVEL_TRACE ||
+                            PCDEV_LEVEL_INFO ||
+                            PCDEV_LEVEL_DBG;
     g_pcdev_ctx.print_port = 1;
     g_pcdev_ctx.pcdev_hw_init = pcie_cdev_rc_init;
     g_pcdev_ctx.pcdev_hw_exit = pcie_cdev_rc_exit;
@@ -323,23 +318,16 @@ int pcie_cdev_platform_rc_init(void)
     g_pcdev_ctx.pcie_first_user = bsp_is_pcie_first_user;
 
     PCDEV_ERR("init begin\n");
-    pcdev_dump_init();
 
-    ret = pcdev_initwork_init();
-    if (ret)
-    {
-        PCDEV_ERR("pcdev_initwork_init err\n");
-        return ret;
-    }
+    pcdev_initwork_init();
 
     pcie_cdev_callback_info.callback = pcie_cdev_rc_cb;
     pcie_cdev_callback_info.callback_args = NULL;
 
     ret = bsp_pcie_rc_cb_register(PCIE_USER_CHAR_DEV, &pcie_cdev_callback_info);
     if (ret)
-    {
         PCDEV_ERR("pcie cb regiest fail\n");
-    }
+
     //bsp_pcie_rc_cb_run(PCIE_RC_CB_ENUM_DONE);
     bsp_pcie_rc_cb_run_with_id(PCIE_USER_CHAR_DEV, PCIE_RC_CB_ENUM_DONE);
     ret = platform_driver_register(&g_pcdev_pltfm_driver);
@@ -350,7 +338,6 @@ int pcie_cdev_platform_rc_init(void)
     }
 
     register_syscore_ops(&g_pcdev_ops);
-    //mytimer_init();
     PCDEV_TRACE("pcie_cdev_platform_rc_init finish\n");
     return ret;
 }

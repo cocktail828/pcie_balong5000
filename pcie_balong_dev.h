@@ -22,16 +22,16 @@
 
 #define PCIE_INTX_REG_BIT 5
 
-#define PCIE_RC_PR_ERR(fmt, args...)                                           \
-    do                                                                         \
-    {                                                                          \
-        printk(KERN_ERR "[AP_PCIE_KERNEL]%s:" fmt "\n", __FUNCTION__, ##args); \
+#define PCIE_RC_PR_ERR(fmt, args...)                                                      \
+    do                                                                                    \
+    {                                                                                     \
+        printk(KERN_ERR "[AP_PCIE_KERNEL][%d] %s:" fmt "\n", __LINE__, __func__, ##args); \
     } while (0)
 
-#define PCIE_RC_TEST_PR_ERR(fmt, args...)                                           \
-    do                                                                              \
-    {                                                                               \
-        printk(KERN_ERR "[AP_KERNEL_PCIE_TEST]%s:" fmt "\n", __FUNCTION__, ##args); \
+#define PCIE_RC_TEST_PR_ERR(fmt, args...)                                                      \
+    do                                                                                         \
+    {                                                                                          \
+        printk(KERN_ERR "[AP_KERNEL_PCIE_TEST][%d] %s:" fmt "\n", __LINE__, __func__, ##args); \
     } while (0)
 
 enum pcie_rc_event

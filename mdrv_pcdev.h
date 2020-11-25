@@ -258,7 +258,7 @@ extern "C"
     /**
 * @brief 读完成回调格式
 */
-    typedef void (*pcdev_read_done_cb_t)(void);
+    typedef void (*pcdev_read_done_cb_t)(void *);
     /**
 * @brief 事件完成回调格式
 */

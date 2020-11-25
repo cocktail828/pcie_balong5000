@@ -114,7 +114,7 @@ void port_desc_map(unsigned int port_num, unsigned int mode)
     union pcie_cdev_map *desc = g_pcie_cdev_ports[port_num].desc;
     int i;
 
-    if (mode == 0)
+    if (mode == PCIE_WORK_MODE_EP)
     {
         port->port_id = &desc->ep.port_id;
         port->local_stat = &desc->ep.self_status;
@@ -146,7 +146,7 @@ void port_desc_map(unsigned int port_num, unsigned int mode)
         port->rx_buf_max_size = desc->ep.rx_max_size;
         port->tx_buf_max_sz = &desc->ep.tx_max_size;
     }
-    else if (mode == 4)
+    else if (mode == PCIE_WORK_MODE_RC)
     {
         port->port_id = &desc->rc.port_id;
         port->local_stat = &desc->rc.self_status;
