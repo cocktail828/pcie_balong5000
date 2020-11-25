@@ -96,6 +96,7 @@ extern "C"
 #include "wan_eth_table.h"
 #include "wan_eth_event_buffer.h"
 #include "securec.h"
+#include "pcie_balong_dev.h"
 
     MODULE_AUTHOR("Huawei");
     MODULE_LICENSE("GPL");
@@ -116,6 +117,7 @@ extern "C"
     struct weth_rc_ctx g_pctx;
     struct common_info g_common_info;
     struct weth_common_ctx g_common_ctx;
+    extern struct rc_pcie_info *g_pcie_rc_info;
 
     extern int test_performance;
     struct device *g_pdev_for_map;
@@ -1277,11 +1279,11 @@ extern "C"
 
     static DEVICE_ATTR(gro_state, 0660, weth_gro_state_get, weth_gro_state_set);
 
-    static int weth_gro_state_probe(struct platform_device *pdev)
+    static int weth_gro_state_probe(struct device *pdev)
     {
         int ret = 0;
 
-        ret = device_create_file(&(pdev->dev), &dev_attr_gro_state);
+        ret = device_create_file(pdev, &dev_attr_gro_state);
         if (ret)
         {
             weth_pr_err("weth_gro_state_probe failed \n");
@@ -1292,16 +1294,18 @@ extern "C"
         return ret;
     }
 
-    STATIC int netdev_probe(struct platform_device *pdev)
+    // STATIC int netdev_probe(struct platform_device *pdev)
+    STATIC int netdev_probe(struct pci_dev *pdev, int devid, const char *ifname)
     {
-        struct device_node *np = pdev->dev.of_node;
+        // struct device_node *np = pdev->dev.of_node;
         struct net_device *ndev = NULL;
         struct weth_ctx *priv = NULL;
-        unsigned int dev_id;
-        char buf[WETH_NAME_LEN] = {0};
-        const char *name = buf;
+        unsigned int dev_id = devid;
+        // char buf[WETH_NAME_LEN] = {0};
+        const char *name = ifname;
         int ret, retv;
         int i;
+
         printk("[weth]%s\n", __func__);
         FUNCTION_START;
         ndev = alloc_etherdev(sizeof(struct weth_ctx));
@@ -1312,13 +1316,13 @@ extern "C"
             goto error;
         }
 
-        dev_id = weth_get_dev_id(np);
-        ret = of_property_read_string(np, "nic_name", &name);
-        if (ret < 0)
-        {
-            weth_pr_err("Can't find [nic_name]!\n");
-            return ret;
-        }
+        // dev_id = weth_get_dev_id(np);
+        // ret = of_property_read_string(np, "nic_name", &name);
+        // if (ret < 0)
+        // {
+        //     weth_pr_err("Can't find [nic_name]!\n");
+        //     return ret;
+        // }
 
         retv = memcpy_s(ndev->name, IFNAMSIZ, name, strlen(name));
         if (retv)
@@ -1386,7 +1390,7 @@ extern "C"
         priv->rx_wpos = 0;
         priv->gro_enable = 1;
 
-        weth_gro_state_probe(pdev);
+        weth_gro_state_probe(&pdev->dev);
         g_weth_global.cur_cpu = 1;
 
         weth_pr_err("wan eth init sucsess\n");
@@ -1426,44 +1430,44 @@ extern "C"
 #define WETH_PM_OPS NULL
 #endif
 
-    STATIC const struct of_device_id weth_dt_ids[] = {
-        {.compatible = "hisilicon,rmnet0"},
-        {.compatible = "hisilicon,rmnet1"},
-        {.compatible = "hisilicon,rmnet2"},
-        {.compatible = "hisilicon,rmnet3"},
-        {.compatible = "hisilicon,rmnet4"},
-        {.compatible = "hisilicon,rmnet5"},
-        {.compatible = "hisilicon,rmnet6"},
-        {.compatible = "hisilicon,rmnet_ims00"},
-        {.compatible = "hisilicon,rmnet_ims10"},
-        {.compatible = "hisilicon,rmnet_emc0"},
-        {.compatible = "hisilicon,rmnet_emc1"},
-        {.compatible = "hisilicon,rmnet_r_ims00"},
-        {.compatible = "hisilicon,rmnet_r_ims01"},
-        {.compatible = "hisilicon,rmnet_r_ims10"},
-        {.compatible = "hisilicon,rmnet_r_ims11"},
-        {.compatible = "hisilicon,rmnet_tun00"},
-        {.compatible = "hisilicon,rmnet_tun01"},
-        {.compatible = "hisilicon,rmnet_tun02"},
-        {.compatible = "hisilicon,rmnet_tun03"},
-        {.compatible = "hisilicon,rmnet_tun04"},
-        {.compatible = "hisilicon,rmnet_tun10"},
-        {.compatible = "hisilicon,rmnet_tun11"},
-        {.compatible = "hisilicon,rmnet_tun12"},
-        {.compatible = "hisilicon,rmnet_tun13"},
-        {.compatible = "hisilicon,rmnet_tun14"},
-        {/* sentinel */}};
+    // STATIC const struct of_device_id weth_dt_ids[] = {
+    //     {.compatible = "hisilicon,rmnet0"},
+    //     {.compatible = "hisilicon,rmnet1"},
+    //     {.compatible = "hisilicon,rmnet2"},
+    //     {.compatible = "hisilicon,rmnet3"},
+    //     {.compatible = "hisilicon,rmnet4"},
+    //     {.compatible = "hisilicon,rmnet5"},
+    //     {.compatible = "hisilicon,rmnet6"},
+    //     {.compatible = "hisilicon,rmnet_ims00"},
+    //     {.compatible = "hisilicon,rmnet_ims10"},
+    //     {.compatible = "hisilicon,rmnet_emc0"},
+    //     {.compatible = "hisilicon,rmnet_emc1"},
+    //     {.compatible = "hisilicon,rmnet_r_ims00"},
+    //     {.compatible = "hisilicon,rmnet_r_ims01"},
+    //     {.compatible = "hisilicon,rmnet_r_ims10"},
+    //     {.compatible = "hisilicon,rmnet_r_ims11"},
+    //     {.compatible = "hisilicon,rmnet_tun00"},
+    //     {.compatible = "hisilicon,rmnet_tun01"},
+    //     {.compatible = "hisilicon,rmnet_tun02"},
+    //     {.compatible = "hisilicon,rmnet_tun03"},
+    //     {.compatible = "hisilicon,rmnet_tun04"},
+    //     {.compatible = "hisilicon,rmnet_tun10"},
+    //     {.compatible = "hisilicon,rmnet_tun11"},
+    //     {.compatible = "hisilicon,rmnet_tun12"},
+    //     {.compatible = "hisilicon,rmnet_tun13"},
+    //     {.compatible = "hisilicon,rmnet_tun14"},
+    //     {/* sentinel */}};
 
-    struct platform_driver weth_driver = {
-        .probe = netdev_probe,
-        .remove = netdev_remove,
-        .driver = {
-            .name = "weth",
-            .owner = THIS_MODULE,
-            .pm = WETH_PM_OPS,
-            .of_match_table = of_match_ptr(weth_dt_ids),
-        },
-    };
+    // struct platform_driver weth_driver = {
+    //     .probe = netdev_probe,
+    //     .remove = netdev_remove,
+    //     .driver = {
+    //         .name = "weth",
+    //         .owner = THIS_MODULE,
+    //         .pm = WETH_PM_OPS,
+    //         .of_match_table = of_match_ptr(weth_dt_ids),
+    //     },
+    // };
 
     STATIC struct rx_smp_node *weth_get_smp_node(void)
     {
@@ -1866,7 +1870,7 @@ extern "C"
             pctx->stat_unvote_fail++;
         }
     err_out2:
-        platform_driver_unregister(pctx->rc_platform_driver);
+        // platform_driver_unregister(pctx->rc_platform_driver);
 
         FUNCTION_END;
         return ret;
@@ -1987,11 +1991,11 @@ extern "C"
 
     static DEVICE_ATTR(vote_count, 0660, weth_vote_count_get, weth_vote_count_set);
 
-    static int weth_vote_count_state(struct platform_device *pdev)
+    static int weth_vote_count_state(struct device *pdev)
     {
         int ret = 0;
 
-        ret = device_create_file(&(pdev->dev), &dev_attr_vote_count);
+        ret = device_create_file(pdev, &dev_attr_vote_count);
         if (ret)
         {
             weth_pr_err("weth_vote_count_state failed \n");
@@ -2031,11 +2035,11 @@ extern "C"
 
     static DEVICE_ATTR(hook, 0660, weth_show_hook, weth_set_hook);
 
-    static int weth_hook_state(struct platform_device *pdev)
+    static int weth_hook_state(struct device *pdev)
     {
         int ret = 0;
 
-        ret = device_create_file(&(pdev->dev), &dev_attr_hook);
+        ret = device_create_file(pdev, &dev_attr_hook);
         if (ret)
         {
             weth_pr_err("weth_hook_state failed \n");
@@ -2046,7 +2050,8 @@ extern "C"
         return ret;
     }
 
-    STATIC int rc_pltfm_probe(struct platform_device *pdev)
+    // STATIC int rc_pltfm_probe(struct platform_device *pdev)
+    STATIC int rc_pltfm_probe(struct pci_dev *pdev)
     {
         struct weth_rc_ctx *pctx = &g_pctx;
 
@@ -2058,8 +2063,8 @@ extern "C"
         }
         pctx->pdev = pdev;
         g_pdev_for_map = &pdev->dev;
-        weth_vote_count_state(pdev);
-        weth_hook_state(pdev);
+        weth_vote_count_state(&pdev->dev);
+        weth_hook_state(&pdev->dev);
         pctx->dynamic_napi_weight = 0;
         weth_set_weight_thru(20, 30, 60);
         weth_set_weight(1, 4, 8, 64);
@@ -2105,37 +2110,37 @@ extern "C"
 #define PETH_RC_PM_OPS NULL
 #endif
 
-    STATIC const struct of_device_id rc_match[] = {
-        {.compatible = "hisilicon,weth_rc"},
-        {},
-    };
+    // STATIC const struct of_device_id rc_match[] = {
+    //     {.compatible = "hisilicon,weth_rc"},
+    //     {},
+    // };
 
-    STATIC struct platform_driver rc_pltfm_driver = {
-        .probe = rc_pltfm_probe,
-        .remove = rc_pltfm_remove,
-        .shutdown = rc_pltfm_shutdown,
-        .driver = {
-            .name = "weth_rc",
-            .of_match_table = rc_match,
-            .pm = PETH_RC_PM_OPS,
-        },
-    };
+    // STATIC struct platform_driver rc_pltfm_driver = {
+    //     .probe = rc_pltfm_probe,
+    //     .remove = rc_pltfm_remove,
+    //     .shutdown = rc_pltfm_shutdown,
+    //     .driver = {
+    //         .name = "weth_rc",
+    //         .of_match_table = rc_match,
+    //         .pm = PETH_RC_PM_OPS,
+    //     },
+    // };
 
-    STATIC int rc_platform_driver_register(void)
-    {
-        int ret = 0;
+    // STATIC int rc_platform_driver_register(void)
+    // {
+    //     int ret = 0;
 
-        FUNCTION_START;
-        g_pctx.rc_platform_driver = &rc_pltfm_driver;
-        ret = platform_driver_register(&rc_pltfm_driver);
-        if (ret)
-        {
-            weth_pr_err("register peth_rc_device failed\n");
-        }
+    //     FUNCTION_START;
+    //     g_pctx.rc_platform_driver = &rc_pltfm_driver;
+    //     ret = platform_driver_register(&rc_pltfm_driver);
+    //     if (ret)
+    //     {
+    //         weth_pr_err("register peth_rc_device failed\n");
+    //     }
 
-        FUNCTION_END;
-        return ret;
-    }
+    //     FUNCTION_END;
+    //     return ret;
+    // }
 
     STATIC struct task_struct *g_peth_tsk;
 
@@ -2273,10 +2278,11 @@ extern "C"
         g_peth_tsk = kthread_run(weth_rc_thread, NULL, "weth_rc_thread");
         weth_pr_err("weth_rc_thread init sucsess\n");
 
-        ret = rc_platform_driver_register();
+        // ret = rc_platform_driver_register();
+        ret = rc_pltfm_probe(g_pcie_rc_info->balong_multi_ep[0]);
         if (ret)
         {
-            weth_pr_err("rc_platform_driver_register fail\n");
+            weth_pr_err("rc_pltfm_probe fail\n");
             return ret;
         }
 
@@ -2724,16 +2730,20 @@ extern "C"
         int ret;
 
         weth_pr_err("weth_init start!\n");
-        ret = platform_driver_register(&weth_driver);
+        // ret = platform_driver_register(&weth_driver);
+        ret = netdev_probe(g_pcie_rc_info->balong_multi_ep[0], 0, "rmnet0");
         if (ret)
         {
-            weth_pr_err("register peth_device failed\n");
+            weth_pr_err("netdev_probe failed\n");
+            return -1;
         }
 
         ret = weth_rc_callback_register();
         if (ret)
         {
-            platform_driver_unregister(&weth_driver);
+            // platform_driver_unregister(&weth_driver);
+            weth_pr_err("weth_rc_callback_register failed\n");
+            return -1;
         }
 
         g_weth_global.cur_node_num = WETH_MAX_RX_NODE;

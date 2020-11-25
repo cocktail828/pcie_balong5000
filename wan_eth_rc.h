@@ -353,7 +353,7 @@ struct weth_rc_pm_status
 struct weth_rc_ctx
 {
     /* kernel dev */
-    struct platform_device *pdev;
+    struct pci_dev *pdev;
 
     /* resource lock */
     spinlock_t rx_lock;
@@ -388,7 +388,7 @@ struct weth_rc_ctx
     struct workqueue_struct *xmit_queue;
     struct delayed_work xmit_work;
     struct timer_list vote_timer;
-    struct platform_driver *rc_platform_driver;
+    // struct platform_driver *rc_platform_driver;
 
     struct sk_buff *tx_tail_skb_all;
     unsigned int tx_list_len_all;

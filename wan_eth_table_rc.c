@@ -379,7 +379,7 @@ extern "C"
         FUNCTION_START;
         node = &tab_ctx->tx_node[idx];
         atomic_add(1, &tab_ctx->finished_tx_tab_num);
-        weth_pr_warn("tx idx: %d\n", idx);
+        // weth_pr_warn("tx idx: %d\n", idx);
 
         dma_unmap_single(g_weth_tab_ctx.dev_for_map, virt_to_phys(node->local_desc), sizeof(struct weth_tab_element),
                          DMA_FROM_DEVICE);
