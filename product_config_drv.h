@@ -1,0 +1,3164 @@
+/* MD5: 5ab2fad24211df11f7bc1210eb8b54a6*/
+/*
+ * copyright (C) Huawei Technologies Co., Ltd. 2012-2015. All rights reserved.
+ * foss@huawei.com
+ *
+ * If distributed as part of the Linux kernel, the following license terms
+ * apply:
+ *
+ * * This program is free software; you can redistribute it and/or modify
+ * * it under the terms of the GNU General Public License version 2 and
+ * * only version 2 as published by the Free Software Foundation.
+ * *
+ * * This program is distributed in the hope that it will be useful,
+ * * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * * GNU General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU General Public License
+ * * along with this program; if not, write to the Free Software
+ * * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA
+ *
+ * Otherwise, the following license terms apply:
+ *
+ * * Redistribution and use in source and binary forms, with or without
+ * * modification, are permitted provided that the following conditions
+ * * are met:
+ * * 1) Redistributions of source code must retain the above copyright
+ * *    notice, this list of conditions and the following disclaimer.
+ * * 2) Redistributions in binary form must reproduce the above copyright
+ * *    notice, this list of conditions and the following disclaimer in the
+ * *    documentation and/or other materials provided with the distribution.
+ * * 3) Neither the name of Huawei nor the names of its contributors may
+ * *    be used to endorse or promote products derived from this software
+ * *    without specific prior written permission.
+ *
+ * * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#if !defined(__PRODUCT_CONFIG_DRV_H__)
+#define __PRODUCT_CONFIG_DRV_H__
+
+#ifndef ENABLE_BUILD_VARS
+#define ENABLE_BUILD_VARS
+#endif
+
+#ifndef FEATURE_UPGRADE_TL
+#define FEATURE_UPGRADE_TL
+#endif
+
+#ifndef PRODUCT_NAME
+#define PRODUCT_NAME "hi9500"
+#endif
+
+#ifndef PRODUCT_CFG_CHIP_SOLUTION_NAME
+#define PRODUCT_CFG_CHIP_SOLUTION_NAME "Balong"
+#endif
+
+#ifndef BUILD_TYPE
+#define BUILD_TYPE RELEASE
+#endif
+
+#ifndef PRODUCT_VERSION
+#define PRODUCT_VERSION V100R001C00B010
+#endif
+
+#ifndef PRODUCT_VERSION_STR
+#define PRODUCT_VERSION_STR "V100R001C00B010"
+#endif
+
+#ifndef PRODUCT_FULL_VERSION_STR
+#define PRODUCT_FULL_VERSION_STR "normandy V200R100C00B112"
+#endif
+
+#ifndef PRODUCT_FILE_VERSION_STR
+#define PRODUCT_FILE_VERSION_STR "2.1.6.8"
+#endif
+
+#ifndef PRODUCT_DLOAD_SOFTWARE_VER
+#define PRODUCT_DLOAD_SOFTWARE_VER "21.120.00.00.090"
+#endif
+
+#ifndef CCPU_OS
+#define CCPU_OS RTOSCK_SMP
+#endif
+
+#ifndef HCC_VERSION
+#define HCC_VERSION 7.3
+#endif
+
+#ifndef CORTEX_M3_OS
+#define CORTEX_M3_OS RTOSCK_M3
+#endif
+
+#ifndef PRODUCT_HUAWEI_SDK_VERSION
+#define PRODUCT_HUAWEI_SDK_VERSION "HiB5000 V100R001C00SPC012B010"
+#endif
+
+#ifndef PRODUCT_USER_SDK_VERSION
+#define PRODUCT_USER_SDK_VERSION "UNDEFINED"
+#endif
+
+#ifndef PLATFORM
+#define PLATFORM hi9500
+#endif
+
+#ifndef PLATFORM_HISI_BALONG
+#define PLATFORM_HISI_BALONG hi9500
+#endif
+
+#ifndef ARCH_TYPE
+#define ARCH_TYPE 3339
+#endif
+
+#ifndef OS_LINUX_PRODUCT_NAME
+#define OS_LINUX_PRODUCT_NAME hi9500_udp_defconfig
+#endif
+
+#ifndef OS_LINUX_SLT_PRODUCT_NAME
+#define OS_LINUX_SLT_PRODUCT_NAME hi9500_udp_slt_defconfig
+#endif
+
+#ifndef OS_LINUX_BASE_PRODUCT_NAME
+#define OS_LINUX_BASE_PRODUCT_NAME hi9500_base_defconfig
+#endif
+
+#ifndef OS_LINUX_PHONE_MODEM_PRODUCT_NAME
+#define OS_LINUX_PHONE_MODEM_PRODUCT_NAME hi9500_phone_modem_defconfig
+#endif
+
+#ifndef TARGET_BALONG_PRODUCT
+#define TARGET_BALONG_PRODUCT hi9500_udp
+#endif
+
+#ifndef CONFIG_ARM64
+#define CONFIG_ARM64
+#endif
+
+#ifndef BSP_CONFIG_EDA
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef BSP_CONFIG_ESL_BOOT
+#define BSP_CONFIG_ESL_BOOT
+#endif
+
+#ifndef CONFIG_UART_ESL
+#define CONFIG_UART_ESL
+#endif
+
+#ifndef MINI_XLOADER
+#define MINI_XLOADER
+#endif
+
+#ifndef MINI_FASTBOOT
+#define MINI_FASTBOOT
+#endif
+
+#ifndef FEATURE_SVLSOCKET
+#define FEATURE_SVLSOCKET
+#endif
+
+#ifndef CONFIG_NRBBP
+#define CONFIG_NRBBP
+#endif
+
+#ifndef BURN_ESL
+#define BURN_ESL
+#endif
+
+#ifndef BSP_CONFIG_EMU_MCORE_DTB
+#endif
+
+#ifndef CONFIG_USE_TIMER_STAMP
+#endif
+
+#ifndef MAA_ASIC
+#endif
+
+#ifndef CONFIG_BALONG_L2CACHE
+#endif
+
+#ifndef CONFIG_BALONG_MODEM_RESET_CTRL
+#endif
+
+#else
+#ifndef CONFIG_LPM3_CCPU_START_DTS
+#define CONFIG_LPM3_CCPU_START_DTS
+#endif
+
+#ifndef CONFIG_BALONG_L2CACHE
+#define CONFIG_BALONG_L2CACHE
+#endif
+
+#ifndef EMU_EDMA_LOAD_HAC
+#endif
+
+#ifndef MINI_XLOADER
+#endif
+
+#ifndef MINI_FASTBOOT
+#endif
+
+#ifndef BSP_CONFIG_EMU_NO_USB
+#endif
+
+#ifndef BSP_CONFIG_EMU_NO_NV
+#endif
+
+#ifndef MAA_ASIC
+#define MAA_ASIC
+#endif
+
+#ifndef CONFIG_BBP
+#define CONFIG_BBP
+#endif
+
+#ifndef CONFIG_NRBBP
+#define CONFIG_NRBBP
+#endif
+
+#ifndef BSP_CONFIG_EMU_LPMCU
+#define BSP_CONFIG_EMU_LPMCU
+#endif
+
+#ifndef BSP_CONFIG_EMU_MCORE_DTB
+#endif
+
+#ifndef FEATURE_CPU_PRIVATE_SLICE
+#define FEATURE_CPU_PRIVATE_SLICE
+#endif
+
+#ifndef FEATURE_CPU_PRIVATE_SLICE_HRT
+#define FEATURE_CPU_PRIVATE_SLICE_HRT
+#endif
+
+#endif
+#ifdef EMU_TYPE_EMU
+#ifndef CONFIG_EICC_PHY_EMU
+#define CONFIG_EICC_PHY_EMU
+#endif
+
+#endif
+#ifndef FULLSTACK_NR_LLRAM_ADDR
+#define FULLSTACK_NR_LLRAM_ADDR DDR_FULLSTACK_MEM_ADDR
+#endif
+
+#ifndef FULLSTACK_HAC_LLRAM_ADDR
+#define FULLSTACK_HAC_LLRAM_ADDR (FULLSTACK_NR_LLRAM_ADDR + NRCCPU_LLRAM_BASE_SIZE)
+#endif
+
+#ifndef FULLSTACK_WFI_ADDR
+#define FULLSTACK_WFI_ADDR (FULLSTACK_HAC_LLRAM_ADDR + HAC_LLRAM_SIZE)
+#endif
+
+#ifndef FULLSTACK_WFI_SIZE
+#define FULLSTACK_WFI_SIZE 0x10000
+#endif
+
+#ifndef BSP_CONFIG_NOT_DDR_BYPASSPLL
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef BSP_CONFIG_EMU_NANDC_MEM
+#define BSP_CONFIG_EMU_NANDC_MEM
+#endif
+
+#else
+#ifndef BSP_CONFIG_EMU_NANDC_MEM
+#endif
+
+#endif
+#ifndef CONFIG_MALLOC_UNIFIED
+#define CONFIG_MALLOC_UNIFIED
+#endif
+
+#ifndef LARGE_KERNEL_IMAGE
+#define LARGE_KERNEL_IMAGE
+#endif
+
+#ifndef CONFIG_SMART_SYSTEM_MODEM
+#endif
+
+#ifndef CONFIG_FASTBOOT_DEBUG
+#endif
+
+#ifndef CONFIG_SRAM_SECURE
+#define CONFIG_SRAM_SECURE
+#endif
+
+#ifndef CONFIG_OF
+#define CONFIG_OF
+#endif
+
+#ifndef CCPU_CORE_NUM
+#define CCPU_CORE_NUM 2
+#endif
+
+#ifndef CONFIG_CCPU_FIQ_SMP
+#define CONFIG_CCPU_FIQ_SMP
+#endif
+
+#ifndef CCPU_LLRAM_BASE_ADDR
+#define CCPU_LLRAM_BASE_ADDR 0xE0800000
+#endif
+
+#ifndef CCPU_LLRAM_BASE_SIZE
+#define CCPU_LLRAM_BASE_SIZE 0x50000
+#endif
+
+#ifndef CCPU_SRAM_SIZE
+#define CCPU_SRAM_SIZE 0x3000
+#endif
+
+#ifndef DFC_LLRAM_BASE_ADDR
+#define DFC_LLRAM_BASE_ADDR (CCPU_LLRAM_BASE_ADDR + CCPU_SRAM_SIZE)
+#endif
+
+#ifndef DFC_LLRAM_SIZE
+#define DFC_LLRAM_SIZE 0x3E000
+#endif
+
+#ifndef MAILBOX_LLRAM_BASE_ADDR
+#define MAILBOX_LLRAM_BASE_ADDR DFC_LLRAM_BASE_ADDR
+#endif
+
+#ifndef MAILBOX_LLRAM_SIZE
+#define MAILBOX_LLRAM_SIZE 0x0
+#endif
+
+#ifndef CPU_VIEW_LLRAM_ADDR
+#define CPU_VIEW_LLRAM_ADDR ((MAILBOX_LLRAM_BASE_ADDR) + (MAILBOX_LLRAM_SIZE))
+#endif
+
+#ifndef CPU_VIEW_LLRAM_SIZE
+#define CPU_VIEW_LLRAM_SIZE 0x8000
+#endif
+
+#ifndef LL2_LLRAM_BASE_ADDR
+#define LL2_LLRAM_BASE_ADDR ((CPU_VIEW_LLRAM_ADDR) + (CPU_VIEW_LLRAM_SIZE))
+#endif
+
+#ifndef LL2_LLRAM_SIZE
+#define LL2_LLRAM_SIZE 0x32000
+#endif
+
+#ifndef LTEV_LLRAM_BASE_ADDR
+#define LTEV_LLRAM_BASE_ADDR ((LL2_LLRAM_BASE_ADDR) + (LL2_LLRAM_SIZE))
+#endif
+
+#ifndef LTEV_LLRAM_SIZE
+#define LTEV_LLRAM_SIZE 0x4000
+#endif
+
+#ifndef CONFIG_CCPU_HAS_LLRAM
+#define CONFIG_CCPU_HAS_LLRAM
+#endif
+
+#ifndef CCPU_LLRAM_ADDR
+#define CCPU_LLRAM_ADDR (DFC_LLRAM_BASE_ADDR + DFC_LLRAM_SIZE)
+#endif
+
+#ifndef CCPU_LLRAM_SIZE
+#define CCPU_LLRAM_SIZE (CCPU_LLRAM_BASE_SIZE - CCPU_SRAM_SIZE - DFC_LLRAM_SIZE)
+#endif
+
+#ifdef EMU_TYPE_SLT
+#ifndef MBB_SLT
+#define MBB_SLT
+#endif
+
+#ifndef FEATURE_BALONG_MODEM_ATE
+#endif
+
+#ifndef CONFIG_BALONG_L2CACHE
+#define CONFIG_BALONG_L2CACHE
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_FASTBOOT_LEN
+#define PRODUCT_CFG_FLASH_FASTBOOT_LEN 0xE00000
+#endif
+
+#ifndef SUPPORT_PARA_CFG
+#define SUPPORT_PARA_CFG
+#endif
+
+#ifndef HAC_SLT_TEXT_START_ADDR
+#define HAC_SLT_TEXT_START_ADDR 0x39500000
+#endif
+
+#ifndef HAC_SLT_LLRAM_ADDR
+#define HAC_SLT_LLRAM_ADDR HAC_SLT_TEXT_START_ADDR
+#endif
+
+#ifndef DDR_SLT_MCORE_ADDR
+#define DDR_SLT_MCORE_ADDR 0x03300000
+#endif
+
+#else
+#ifndef MBB_SLT
+#endif
+
+#endif
+#ifndef CONFIG_CCPU_HAS_TCM
+#define CONFIG_CCPU_HAS_TCM
+#endif
+
+#ifndef CCPU_ITCM_ADDR
+#define CCPU_ITCM_ADDR 0x0
+#endif
+
+#ifndef CCPU_ITCM_SIZE
+#define CCPU_ITCM_SIZE 0x8000
+#endif
+
+#ifndef CCPU_ITCM_SIZE_CFG
+#define CCPU_ITCM_SIZE_CFG (0x6u << 0x2)
+#endif
+
+#ifndef CCPU_DTCM_ADDR
+#define CCPU_DTCM_ADDR (CCPU_ITCM_ADDR + CCPU_ITCM_SIZE)
+#endif
+
+#ifndef CCPU_DTCM_SIZE
+#define CCPU_DTCM_SIZE 0x4000
+#endif
+
+#ifndef CCPU_DTCM_SIZE_CFG
+#define CCPU_DTCM_SIZE_CFG (0x5u << 0x2)
+#endif
+
+#ifndef CONFIG_HAS_HAC
+#define CONFIG_HAS_HAC
+#endif
+
+#ifndef HAC_OS
+#define HAC_OS RTOSCK_SMP
+#endif
+
+#ifndef HAC_COMPILER
+#define HAC_COMPILER HCC
+#endif
+
+#ifndef CONFIG_HAC_ARCH
+#define CONFIG_HAC_ARCH "Cortex-R8"
+#endif
+
+#ifndef HAC_CORE_NUM
+#define HAC_CORE_NUM 2
+#endif
+
+#ifndef HAC_TEXT_START_ADDR
+#define HAC_TEXT_START_ADDR HAC_LLRAM_ADDR
+#endif
+
+#ifndef HAC_LLRAM_ADDR
+#define HAC_LLRAM_ADDR 0xF8C00000
+#endif
+
+#ifndef HAC_LLRAM_SIZE
+#define HAC_LLRAM_SIZE 0x280000
+#endif
+
+#ifndef HAC_LLRAM_UNCACHED_SIZE
+#define HAC_LLRAM_UNCACHED_SIZE 0x1B0000
+#endif
+
+#ifndef HAC_LLRAM_CACHED_SIZE
+#define HAC_LLRAM_CACHED_SIZE (HAC_LLRAM_SIZE - HAC_LLRAM_UNCACHED_SIZE)
+#endif
+
+#ifndef CONFIG_HAC_HAS_TCM
+#define CONFIG_HAC_HAS_TCM
+#endif
+
+#ifndef HAC_ITCM_SIZE
+#define HAC_ITCM_SIZE 0x40000
+#endif
+
+#ifndef HAC_ITCM_SIZE_CFG
+#define HAC_ITCM_SIZE_CFG (0x9u << 0x2)
+#endif
+
+#ifndef HAC_DTCM_SIZE
+#define HAC_DTCM_SIZE 0x40000
+#endif
+
+#ifndef HAC_DTCM_SIZE_CFG
+#define HAC_DTCM_SIZE_CFG (0x9u << 0x2)
+#endif
+
+#ifndef HAC_TCM_START_ADDR
+#define HAC_TCM_START_ADDR 0xFE000000
+#endif
+
+#ifndef HAC_ITCM0_ADDR
+#define HAC_ITCM0_ADDR HAC_TCM_START_ADDR
+#endif
+
+#ifndef HAC_ITCM1_ADDR
+#define HAC_ITCM1_ADDR (HAC_ITCM0_ADDR + HAC_ITCM_SIZE)
+#endif
+
+#ifndef HAC_DTCM_ADDR
+#define HAC_DTCM_ADDR (HAC_ITCM1_ADDR + HAC_ITCM_SIZE)
+#endif
+
+#ifndef HAC_DTCM0_ADDR
+#define HAC_DTCM0_ADDR HAC_DTCM_ADDR
+#endif
+
+#ifndef HAC_DTCM1_ADDR
+#define HAC_DTCM1_ADDR HAC_DTCM_ADDR
+#endif
+
+#ifndef HAC_THUMB_OPTIMIZE
+#define HAC_THUMB_OPTIMIZE
+#endif
+
+#ifndef NRCCPU_TEMP_CACHE_ADDR
+#define NRCCPU_TEMP_CACHE_ADDR 0x1F000000
+#endif
+
+#ifndef NRCCPU_TEMP_CACHE_SIZE
+#define NRCCPU_TEMP_CACHE_SIZE 0x00200000
+#endif
+
+#ifndef NRCCPU_TEMP_UNCACHE_ADDR
+#define NRCCPU_TEMP_UNCACHE_ADDR (NRCCPU_TEMP_CACHE_ADDR + NRCCPU_TEMP_CACHE_SIZE)
+#endif
+
+#ifndef NRCCPU_TEMP_UNCACHE_SIZE
+#define NRCCPU_TEMP_UNCACHE_SIZE 0x00200000
+#endif
+
+#ifndef CONFIG_HAS_NRCCPU
+#define CONFIG_HAS_NRCCPU
+#endif
+
+#ifndef NRCCPU_OS
+#define NRCCPU_OS RTOSCK_SMP
+#endif
+
+#ifndef NRCCPU_COMPILER
+#define NRCCPU_COMPILER HCC
+#endif
+
+#ifndef CONFIG_NRCCPU_ARCH
+#define CONFIG_NRCCPU_ARCH "Cortex-R8"
+#endif
+
+#ifndef NRCCPU_CORE_NUM
+#define NRCCPU_CORE_NUM 4
+#endif
+
+#ifndef CONFIG_NRCCPU_HAS_LLRAM
+#define CONFIG_NRCCPU_HAS_LLRAM
+#endif
+
+#ifndef NRCCPU_LLRAM_BASE_ADDR
+#define NRCCPU_LLRAM_BASE_ADDR 0xF9400000
+#endif
+
+#ifndef NRCCPU_LLRAM_BASE_SIZE
+#define NRCCPU_LLRAM_BASE_SIZE 0x00100000
+#endif
+
+#ifndef NRCCPU_SRAM_SIZE
+#define NRCCPU_SRAM_SIZE 0x3000
+#endif
+
+#ifndef NRCCPU_LLRAM_ADDR
+#define NRCCPU_LLRAM_ADDR (NRCCPU_LLRAM_BASE_ADDR + NRCCPU_SRAM_SIZE)
+#endif
+
+#ifndef NRCCPU_LLRAM_SIZE
+#define NRCCPU_LLRAM_SIZE (NRCCPU_LLRAM_BASE_SIZE - NRCCPU_SRAM_SIZE)
+#endif
+
+#ifndef CONFIG_NRCCPU_HAS_TCM
+#define CONFIG_NRCCPU_HAS_TCM
+#endif
+
+#ifndef NRCCPU_ITCM_ADDR
+#define NRCCPU_ITCM_ADDR 0x0
+#endif
+
+#ifndef NRCCPU_ITCM_SIZE
+#define NRCCPU_ITCM_SIZE 0x10000
+#endif
+
+#ifndef NRCCPU_ITCM_SIZE_CFG
+#define NRCCPU_ITCM_SIZE_CFG (0x7u << 0x2)
+#endif
+
+#ifndef NRCCPU_DTCM_ADDR
+#define NRCCPU_DTCM_ADDR (NRCCPU_ITCM_ADDR + NRCCPU_ITCM_SIZE)
+#endif
+
+#ifndef NRCCPU_DTCM_SIZE
+#define NRCCPU_DTCM_SIZE 0x10000
+#endif
+
+#ifndef NRCCPU_DTCM_SIZE_CFG
+#define NRCCPU_DTCM_SIZE_CFG (0x7u << 0x2)
+#endif
+
+#ifndef DDR_MCORE_RELOC_SIZE
+#define DDR_MCORE_RELOC_SIZE 0x10000
+#endif
+
+#ifndef CONFIG_NVIM
+#define CONFIG_NVIM
+#endif
+
+#ifndef CONFIG_NR_NVIM
+#define CONFIG_NR_NVIM
+#endif
+
+#ifndef CONFIG_NV_AB_FEATURE
+#endif
+
+#ifndef FEATURE_NV_FBT_MEM
+#define FEATURE_NV_FBT_MEM
+#endif
+
+#ifndef FEATURE_NV_FLASH_ON
+#endif
+
+#ifndef FEATURE_NV_EMMC_ON
+#define FEATURE_NV_EMMC_ON
+#endif
+
+#ifndef FEATURE_NV_LFILE_ON
+#endif
+
+#ifndef FEATURE_NV_RFILE_ON
+#endif
+
+#ifndef NV_IMG_BOOT_CHECK_REBOOT_ON
+#define NV_IMG_BOOT_CHECK_REBOOT_ON
+#endif
+
+#ifndef NV_IMG_UNIFIED
+#define NV_IMG_UNIFIED
+#endif
+
+#ifndef FEATURE_TLPHY_MAILBOX
+#define FEATURE_TLPHY_MAILBOX
+#endif
+
+#ifndef CONFIG_MAILBOX_TYPE
+#define CONFIG_MAILBOX_TYPE
+#endif
+
+#ifndef CONFIG_HIFI_MAILBOX
+#endif
+
+#ifndef FEATURE_CPHY_MAILBOX
+#endif
+
+#ifndef ENABLE_BUILD_OM
+#define ENABLE_BUILD_OM
+#endif
+
+#ifndef CONFIG_DUMP_LOG_ESCAPE_FIQ
+#define CONFIG_DUMP_LOG_ESCAPE_FIQ
+#endif
+
+#ifndef FEATURE_OM_PHONE
+#endif
+
+#ifndef ENABLE_BUILD_SYSVIEW
+#endif
+
+#ifndef ENABLE_BUILD_CPUVIEW
+#endif
+
+#ifndef ENABLE_BUILD_MEMVIEW
+#endif
+
+#ifndef ENABLE_BUILD_AMON_SOC
+#endif
+
+#ifndef ENABLE_BUILD_AMON_MDM
+#endif
+
+#ifndef CONFIG_HISI_AMON_DEBUGFS
+#define CONFIG_HISI_AMON_DEBUGFS
+#endif
+
+#ifndef ENABLE_AMON_SOC
+#endif
+
+#ifndef ENABLE_AMON_MDM
+#define ENABLE_AMON_MDM
+#endif
+
+#ifndef ENABLE_BUILD_UTRACE
+#endif
+
+#ifndef ENABLE_BUILD_HAC_DUMP
+#define ENABLE_BUILD_HAC_DUMP
+#endif
+
+#ifndef ENABLE_BUILD_NRRDR
+#define ENABLE_BUILD_NRRDR
+#endif
+
+#ifndef CONFIG_EARLY_LOG
+#define CONFIG_EARLY_LOG
+#endif
+
+#ifndef ENABLE_BUILD_SOCP
+#define ENABLE_BUILD_SOCP
+#endif
+
+#ifndef CONFIG_DIAG_SYSTEM
+#define CONFIG_DIAG_SYSTEM
+#endif
+
+#ifndef CONFIG_HIMS_NV_PROC
+#define CONFIG_HIMS_NV_PROC
+#endif
+
+#ifndef CONFIG_DIAG_NETLINK
+#define CONFIG_DIAG_NETLINK
+#endif
+
+#ifndef CONFIG_DIAG_CHECK_MODEM_STATUS
+#define CONFIG_DIAG_CHECK_MODEM_STATUS
+#endif
+
+#ifndef DIAG_VERSION_ENG
+#define DIAG_VERSION_ENG
+#endif
+
+#ifndef CONFIG_DIAG_NRM
+#define CONFIG_DIAG_NRM
+#endif
+
+#ifndef CONFIG_FILEBROSWER
+#define CONFIG_FILEBROSWER
+#endif
+
+#ifndef FEATURE_SOCP_ADDR_64BITS
+#define FEATURE_SOCP_ADDR_64BITS
+#endif
+
+#ifndef DIAG_BBP_WRPTR_OFFSET
+#endif
+
+#ifndef DIAG_SYSTEM_5G
+#define DIAG_SYSTEM_5G
+#endif
+
+#ifndef DIAG_SYSTEM_A_PLUS_B_CP
+#endif
+
+#ifndef DIAG_SYSTEM_A_PLUS_B_AP
+#endif
+
+#ifndef FEATURE_SOCP_VIC
+#endif
+
+#ifndef SOCP_DECODE_ENABLE
+#endif
+
+#ifndef CONFIG_VER_3_TLBBP_DS_BOSTON_AND_LATER
+#define CONFIG_VER_3_TLBBP_DS_BOSTON_AND_LATER
+#endif
+
+#ifndef CONFIG_DEFLATE
+#endif
+
+#ifndef CONFIG_BALONG_CORESIGHT
+#define CONFIG_BALONG_CORESIGHT
+#endif
+
+#ifndef FEATURE_HDS_PRINTLOG
+#define FEATURE_HDS_PRINTLOG FEATURE_ON
+#endif
+
+#ifndef FEATURE_HDS_TRANSLOG
+#define FEATURE_HDS_TRANSLOG FEATURE_ON
+#endif
+
+#ifndef FEATURE_SRE_PRINT_SLICE
+#define FEATURE_SRE_PRINT_SLICE FEATURE_ON
+#endif
+
+#ifndef FEATURE_SRE_PRINT_RTC
+#define FEATURE_SRE_PRINT_RTC FEATURE_OFF
+#endif
+
+#ifndef CONFIG_NOC
+#define CONFIG_NOC
+#endif
+
+#ifndef CONFIG_NOC_AP
+#define CONFIG_NOC_AP
+#endif
+
+#ifndef CONFIG_MODEM_FULL_DUMP
+#define CONFIG_MODEM_FULL_DUMP
+#endif
+
+#ifndef CONFIG_MODEM_MINI_DUMP
+#define CONFIG_MODEM_MINI_DUMP
+#endif
+
+#ifndef CONFIG_MODEM_DUMP_BLACKLIST
+#endif
+
+#ifndef CONFIG_APLUSB_LOG
+#define CONFIG_APLUSB_LOG
+#endif
+
+#ifndef CONFIG_MID
+#define CONFIG_MID
+#endif
+
+#ifndef CONFIG_DMSS
+#define CONFIG_DMSS
+#endif
+
+#ifndef CONFIG_BUS_ERR_NR
+#define CONFIG_BUS_ERR_NR
+#endif
+
+#ifndef CONFIG_BUS_ERR_LR
+#define CONFIG_BUS_ERR_LR
+#endif
+
+#ifndef CONFIG_BUS_ERR_AP
+#define CONFIG_BUS_ERR_AP
+#endif
+
+#ifndef CONFIG_PDLOCK
+#endif
+
+#ifndef CONFIG_PDLOCK_RENEW
+#define CONFIG_PDLOCK_RENEW
+#endif
+
+#ifndef CONFIG_PDLOCK_AP
+#define CONFIG_PDLOCK_AP
+#endif
+
+#ifndef CONFIG_M3_APB_SPI
+#define CONFIG_M3_APB_SPI
+#endif
+
+#ifndef FEATURE_SOCP_DECODE_INT_TIMEOUT
+#define FEATURE_SOCP_DECODE_INT_TIMEOUT FEATURE_ON
+#endif
+
+#ifndef FEATURE_SOCP_MEM_RESERVED
+#define FEATURE_SOCP_MEM_RESERVED FEATURE_OFF
+#endif
+
+#ifndef FEATURE_SAMPLE_LTE_CHAN
+#define FEATURE_SAMPLE_LTE_CHAN FEATURE_OFF
+#endif
+
+#ifndef FEATURE_SCI_PROTOL_T1
+#define FEATURE_SCI_PROTOL_T1 FEATURE_OFF
+#endif
+
+#ifndef FEATURE_SCI_ESIM
+#define FEATURE_SCI_ESIM FEATURE_OFF
+#endif
+
+#ifndef CONFIG_SC
+#endif
+
+#ifndef CONFIG_DSP
+#endif
+
+#ifndef ENABLE_BUILD_PRINT
+#define ENABLE_BUILD_PRINT
+#endif
+
+#ifndef CONFIG_NRDSP
+#define CONFIG_NRDSP
+#endif
+
+#ifndef CONFIG_NRDSP_FULL_DUMP
+#define CONFIG_NRDSP_FULL_DUMP
+#endif
+
+#ifndef CONFIG_NRDSP_MINI_DUMP
+#endif
+
+#ifndef CONFIG_CBBE
+#define CONFIG_CBBE
+#endif
+
+#ifndef FEATURE_DRV_LTEV
+#define FEATURE_DRV_LTEV
+#endif
+
+#ifndef LTEV_DSP1_WDT_INT
+#define LTEV_DSP1_WDT_INT
+#endif
+
+#ifndef DIAG_SYSTEM_LTEV
+#define DIAG_SYSTEM_LTEV
+#endif
+
+#ifndef FEATURE_BBP_LTEV
+#define FEATURE_BBP_LTEV
+#endif
+
+#ifndef MODEM_MEM_REPAIR
+#define MODEM_MEM_REPAIR
+#endif
+
+#ifndef CONFIG_WATCHPOINT
+#define CONFIG_WATCHPOINT
+#endif
+
+#ifndef CONFIG_BALONG_RDR
+#define CONFIG_BALONG_RDR
+#endif
+
+#ifndef CONFIG_RDR_BACK_UP
+#define CONFIG_RDR_BACK_UP
+#endif
+
+#ifndef CONFIG_DSPDVS
+#define CONFIG_DSPDVS
+#endif
+
+#ifndef FEATURE_DSP_DFS
+#define FEATURE_DSP_DFS FEATURE_ON
+#endif
+
+#ifndef CONFIG_DSP_STRESS
+#define CONFIG_DSP_STRESS
+#endif
+
+#ifndef FEATURE_GUBBP_HANDSHAKE
+#define FEATURE_GUBBP_HANDSHAKE FEATURE_ON
+#endif
+
+#ifndef FEATURE_GUDRX_NEWVERSION
+#define FEATURE_GUDRX_NEWVERSION FEATURE_ON
+#endif
+
+#ifndef FEATURE_BOSTON_ONLY_FEATURE
+#define FEATURE_BOSTON_ONLY_FEATURE FEATURE_OFF
+#endif
+
+#ifndef FEATURE_DSP_PM_SEPARATE_MODE
+#define FEATURE_DSP_PM_SEPARATE_MODE FEATURE_ON
+#endif
+
+#ifndef FEATURE_CSDR_COMBINE
+#define FEATURE_CSDR_COMBINE FEATURE_ON
+#endif
+
+#ifndef FEATURE_GUC_TRANSPLANT
+#define FEATURE_GUC_TRANSPLANT FEATURE_OFF
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef CONFIG_VERSION_STUB
+#define CONFIG_VERSION_STUB
+#endif
+
+#else
+#ifndef CONFIG_VERSION_STUB
+#endif
+
+#endif
+#ifndef HW_VERSION_STUB
+#define HW_VERSION_STUB 0X77000006
+#endif
+
+#ifndef CONFIG_VERSION_EXTRA_MODEM
+#endif
+
+#ifndef PXXX_BOARD_TYPE_ONLY_SOC
+#endif
+
+#ifndef CONFIG_VERSION_PRODUCT_HKADC
+#define CONFIG_VERSION_PRODUCT_HKADC
+#endif
+
+#ifndef FEATURE_TCM_RETENTION
+#define FEATURE_TCM_RETENTION FEATURE_ON
+#endif
+
+#ifndef FEATURE_TCM_PART_RETENTION
+#define FEATURE_TCM_PART_RETENTION FEATURE_OFF
+#endif
+
+#ifndef CONFIG_MLOADER
+#define CONFIG_MLOADER
+#endif
+
+#ifndef CONFIG_DYNAMIC_LOAD
+#endif
+
+#ifndef RFIC_LOAD_MANUAL
+#define RFIC_LOAD_MANUAL
+#endif
+
+#ifndef CONFIG_NRCPM
+#define CONFIG_NRCPM
+#endif
+
+#ifndef CONFIG_NEWVER_RFIC
+#define CONFIG_NEWVER_RFIC
+#endif
+
+#ifndef CONFIG_NR_NEWMAILBOX
+#define CONFIG_NR_NEWMAILBOX
+#endif
+
+#ifndef CONFIG_BBIC_LOWPOWER
+#define CONFIG_BBIC_LOWPOWER
+#endif
+
+#ifndef FEATURE_CHR_OM
+#define FEATURE_CHR_OM FEATURE_OFF
+#endif
+
+#ifndef CONFIG_NR_LTE_MASTER_SLAVE
+#define CONFIG_NR_LTE_MASTER_SLAVE
+#endif
+
+#ifndef CONFIG_LIGHTSLEEP_POWERDOWN
+#define CONFIG_LIGHTSLEEP_POWERDOWN
+#endif
+
+#ifndef CONFIG_BALONG_EXTRA_RDR
+#endif
+
+#ifndef CONFIG_MBB_AP_SCI
+#define CONFIG_MBB_AP_SCI
+#endif
+
+#ifndef CONFIG_MBB_SIMHOTPLUG
+#define CONFIG_MBB_SIMHOTPLUG
+#endif
+
+#ifndef CONFIG_SECDEBUG_VERIFY
+#define CONFIG_SECDEBUG_VERIFY
+#endif
+
+#ifndef CONFIG_BBPDS
+#define CONFIG_BBPDS
+#endif
+
+#ifndef FLASH_PTABLE_OFFSET
+#define FLASH_PTABLE_OFFSET 0x5900000
+#endif
+
+#ifndef FLASH_PTABLE_SIZE
+#define FLASH_PTABLE_SIZE 0x100000
+#endif
+
+#ifndef CONFIG_GPIO_PL061
+#define CONFIG_GPIO_PL061
+#endif
+
+#ifndef CONFIG_TRNG_SEED
+#define CONFIG_TRNG_SEED
+#endif
+
+#ifndef CONFIG_GPIO_EXPANDER
+#endif
+
+#ifndef CONFIG_GPIO_XLOADER
+#define CONFIG_GPIO_XLOADER
+#endif
+
+#ifndef CONFIG_PINCTRL_BALONG
+#endif
+
+#ifndef CONFIG_PINCTRL_PHONE_MODEM
+#endif
+
+#ifndef CONFIG_PIN_CONFIG_BALONG
+#define CONFIG_PIN_CONFIG_BALONG
+#endif
+
+#ifndef CONFIG_EXTRA_PINCTRL
+#endif
+
+#ifndef CONFIG_GNSS_BALONG
+#define CONFIG_GNSS_BALONG
+#endif
+
+#ifndef CONFIG_POSITION_SERVICE
+#define CONFIG_POSITION_SERVICE
+#endif
+
+#ifndef CONFIG_BURN_PHONE
+#define CONFIG_BURN_PHONE
+#endif
+
+#ifndef CONFIG_ONOFF
+#define CONFIG_ONOFF
+#endif
+
+#ifndef CONFIG_EXTRA_ONOFF
+#endif
+
+#ifndef CONFIG_COMPRESS_CCORE_IMAGE
+#define CONFIG_COMPRESS_CCORE_IMAGE
+#endif
+
+#ifndef CONFIG_ZSTD_DECOMPRESS
+#endif
+
+#ifndef BSP_HAS_SEC_FEATURE
+#endif
+
+#ifndef CONFIG_LOAD_SEC_IMAGE
+#define CONFIG_LOAD_SEC_IMAGE
+#endif
+
+#ifndef BSP_ENBALE_PACK_IMAGE
+#endif
+
+#ifndef BSP_USB_BURN
+#define BSP_USB_BURN
+#endif
+
+#ifndef FEATURE_DELAY_MODEM_INIT
+#define FEATURE_DELAY_MODEM_INIT FEATURE_ON
+#endif
+
+#ifndef CONFIG_HIFI
+#define CONFIG_HIFI
+#endif
+
+#ifndef BSP_CONFIG_EMU_HIFI
+#endif
+
+#ifndef CONFIG_HISI_COUL
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef CONFIG_HKADC
+#endif
+
+#ifndef CONFIG_ADC
+#endif
+
+#ifndef CONFIG_DX_LIB
+#endif
+
+#ifndef CONFIG_DMPU
+#endif
+
+#ifndef CONFIG_CMPU_TRNG
+#endif
+
+#ifndef CONFIG_EFUSE
+#endif
+
+#ifndef CONFIG_EFUSE_NR
+#endif
+
+#else
+#ifndef CONFIG_HKADC
+#define CONFIG_HKADC
+#endif
+
+#ifndef CONFIG_ADC
+#define CONFIG_ADC
+#endif
+
+#ifndef CONFIG_DX_LIB
+#define CONFIG_DX_LIB
+#endif
+
+#ifndef CONFIG_DMPU
+#define CONFIG_DMPU
+#endif
+
+#ifndef CONFIG_CMPU_TRNG
+#define CONFIG_CMPU_TRNG
+#endif
+
+#ifndef CONFIG_EFUSE
+#define CONFIG_EFUSE
+#endif
+
+#ifndef CONFIG_EFUSE_NR
+#define CONFIG_EFUSE_NR
+#endif
+
+#ifndef CONFIG_EXTRA_EFUSE
+#endif
+
+#endif
+#ifndef CONFIG_HKADC_CAL_OPT
+#define CONFIG_HKADC_CAL_OPT
+#endif
+
+#ifndef CONFIG_BURN_LCS_AUTO
+#endif
+
+#ifndef CONFIG_SET_SECUREDEBUG
+#endif
+
+#ifndef CONFIG_LEDS_CCORE
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef CONFIG_FB_SPI_BALONG
+#endif
+
+#ifndef CONFIG_FB_EMI_BALONG
+#endif
+
+#ifndef CONFIG_FB_1_4_5_INCH_BALONG
+#endif
+
+#ifndef CONFIG_FB_2_4_INCH_BALONG
+#endif
+
+#else
+#ifndef CONFIG_FB_SPI_BALONG
+#endif
+
+#ifndef CONFIG_FB_EMI_BALONG
+#endif
+
+#ifndef CONFIG_FB_1_4_5_INCH_BALONG
+#endif
+
+#ifndef CONFIG_FB_2_4_INCH_BALONG
+#endif
+
+#endif
+#ifndef CONFIG_PCIE_CFG
+#define CONFIG_PCIE_CFG
+#endif
+
+#ifndef CONFIG_PCIE_NORMALIZE
+#define CONFIG_PCIE_NORMALIZE
+#endif
+
+#ifndef CONFIG_PCIE_DEV_NORMALIZE
+#endif
+
+#ifndef FEATURE_ANTEN_DETECT
+#define FEATURE_ANTEN_DETECT
+#endif
+
+#ifndef CONFIG_ANTEN
+#define CONFIG_ANTEN
+#endif
+
+#ifndef CONFIG_SFLASH
+#endif
+
+#ifndef CONFIG_EMMC_BOOT
+#endif
+
+#ifndef CONFIG_SDHCI
+#endif
+
+#ifndef BUILD_PTABLE
+#endif
+
+#ifndef CONFIG_FMC_MNTN_ENABLE
+#endif
+
+#ifndef CONFIG_UBIFS_BOOT
+#endif
+
+#ifndef CONFIG_AUDIO_SLIC_CLK_NOT_OK
+#endif
+
+#ifndef CONFIG_SLIC
+#define CONFIG_SLIC n
+#endif
+
+#ifndef CONFIG_AUDIO
+#define CONFIG_AUDIO y
+#endif
+
+#ifndef CONFIG_SOUND_TEST
+#endif
+
+#ifndef CONFIG_FMC_BURN_EFUSE
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef CONFIG_DESIGNWARE_I2C
+#endif
+
+#else
+#ifndef CONFIG_DESIGNWARE_I2C
+#define CONFIG_DESIGNWARE_I2C
+#endif
+
+#endif
+#ifndef CONFIG_RTC_ON_SOC
+#endif
+
+#ifndef CONFIG_MODEM_RTC_ON_SOC
+#endif
+
+#ifndef CONFIG_RTC_BUILD_CTRL
+#endif
+
+#ifndef CONFIG_RTC_ON_PMU
+#define CONFIG_RTC_ON_PMU
+#endif
+
+#ifndef CONFIG_PMU_RTC_SPMI
+#define CONFIG_PMU_RTC_SPMI
+#endif
+
+#ifndef CONFIG_RTC_SET_TIME
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef CONFIG_PMU_DR
+#endif
+
+#else
+#ifndef CONFIG_PMU_DR
+#define CONFIG_PMU_DR
+#endif
+
+#endif
+#ifndef CONFIG_SPI_SLAVE
+#endif
+
+#ifndef CONFIG_SPI_HISI
+#endif
+
+#ifndef STACK_CANARY_COMPILE
+#define STACK_CANARY_COMPILE
+#endif
+
+#ifndef CONFIG_MODEM_BALONG_ASLR
+#define CONFIG_MODEM_BALONG_ASLR
+#endif
+
+#ifndef CONFIG_MODEM_BALONG_ASLR_CACHE_ON
+#define CONFIG_MODEM_BALONG_ASLR_CACHE_ON
+#endif
+
+#ifndef CONFIG_MODEM_ASLR_DEBUG
+#define CONFIG_MODEM_ASLR_DEBUG
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef CONFIG_TSENSOR
+#endif
+
+#else
+#ifndef CONFIG_TSENSOR
+#define CONFIG_TSENSOR
+#endif
+
+#endif
+#ifndef FEATURE_THERMAL
+#define FEATURE_THERMAL
+#endif
+
+#ifndef FEATURE_ADC_CDEV
+#define FEATURE_ADC_CDEV
+#endif
+
+#ifndef CONFIG_MODEM_BOOT
+#endif
+
+#ifndef CONFIG_UART_BOOT
+#endif
+
+#ifndef CONFIG_CRC_CHECK
+#endif
+
+#ifndef CONFIG_XLOADER_DBG
+#endif
+
+#ifndef EXTRA_MODEM_MODE_MBB
+#define EXTRA_MODEM_MODE_MBB FEATURE_OFF
+#endif
+
+#ifndef CONFIG_MODEM_PCIE_DEV
+#define CONFIG_MODEM_PCIE_DEV
+#endif
+
+#ifndef CONFIG_RFS_CLIENT
+#endif
+
+#ifndef CONFIG_DIRECT_BOOT
+#define CONFIG_DIRECT_BOOT
+#endif
+
+#ifndef CONFIG_FB_CUST
+#define CONFIG_FB_CUST
+#endif
+
+#ifndef CONFIG_KERNEL_CUST
+#define CONFIG_KERNEL_CUST
+#endif
+
+#ifndef CONFIG_BALONG_ADC
+#define CONFIG_BALONG_ADC
+#endif
+
+#ifndef CONFIG_RFILE_ON
+#define CONFIG_RFILE_ON
+#endif
+
+#ifndef CONFIG_RFILE_USER
+#define CONFIG_RFILE_USER
+#endif
+
+#ifndef CONFIG_DLOAD
+#define CONFIG_DLOAD
+#endif
+
+#ifndef CONFIG_DLOAD_APP
+#define CONFIG_DLOAD_APP
+#endif
+
+#ifndef CONFIG_LOCALUPG
+#define CONFIG_LOCALUPG
+#endif
+
+#ifndef CONFIG_ACTRL_SMP
+#define CONFIG_ACTRL_SMP
+#endif
+
+#ifndef CONFIG_BALONG_MBB_AP
+#define CONFIG_BALONG_MBB_AP
+#endif
+
+#ifndef MCORE_MPU_ENABLE
+#define MCORE_MPU_ENABLE
+#endif
+
+#ifndef CONFIG_MODULE_VIC
+#endif
+
+#ifndef CONFIG_ONCHIPROM_UART
+#endif
+
+#ifndef CONFIG_MEM_DEBUG
+#define CONFIG_MEM_DEBUG
+#endif
+
+#ifndef DTS_STATIC_MEM_SIZE
+#define DTS_STATIC_MEM_SIZE
+#endif
+
+#ifndef CONFIG_CPUFREQ
+#define CONFIG_CPUFREQ
+#endif
+
+#ifndef CONFIG_BUSFREQ
+#define CONFIG_BUSFREQ
+#endif
+
+#ifndef CONFIG_IDLEFREQ
+#define CONFIG_IDLEFREQ
+#endif
+
+#ifndef CONFIG_LOADMONITOR
+#endif
+
+#ifndef CONFIG_CCORE_REGULATOR
+#define CONFIG_CCORE_REGULATOR
+#endif
+
+#ifndef CONFIG_PMCTRL
+#define CONFIG_PMCTRL
+#endif
+
+#ifndef CONFIG_CCORE_WDT
+#define CONFIG_CCORE_WDT
+#endif
+
+#ifndef CONFIG_WDT_HAC_BUILD
+#define CONFIG_WDT_HAC_BUILD
+#endif
+
+#ifndef CONFIG_WDT_NR_BUILD
+#define CONFIG_WDT_NR_BUILD
+#endif
+
+#ifndef CONFIG_WDT_BOOT
+#define CONFIG_WDT_BOOT
+#endif
+
+#ifndef CONFIG_PMIC_FPGA
+#endif
+
+#ifndef CONFIG_NRCCPU_PMU
+#define CONFIG_NRCCPU_PMU
+#endif
+
+#ifndef CONFIG_MULTI_PMU
+#define CONFIG_MULTI_PMU
+#endif
+
+#ifndef CONFIG_PMIC_SPMI
+#define CONFIG_PMIC_SPMI
+#endif
+
+#ifndef CONFIG_PMU_NEW
+#define CONFIG_PMU_NEW
+#endif
+
+#ifndef CONFIG_PMIC_SPMI_PROTOCOL
+#define CONFIG_PMIC_SPMI_PROTOCOL
+#endif
+
+#ifndef CONFIG_PMU_XLOADER
+#define CONFIG_PMU_XLOADER
+#endif
+
+#ifndef CONFIG_NR_DCXO_NV
+#define CONFIG_NR_DCXO_NV
+#endif
+
+#ifndef CONFIG_PMU_RAMP_EN
+#define CONFIG_PMU_RAMP_EN
+#endif
+
+#ifdef EMU_TYPE_ESL
+#ifndef CONFIG_PMU
+#endif
+
+#ifndef CONFIG_PMU_EXTERNAL
+#endif
+
+#ifndef CONFIG_PMU_ESL
+#define CONFIG_PMU_ESL
+#endif
+
+#else
+#ifndef CONFIG_PMU
+#define CONFIG_PMU
+#endif
+
+#ifndef CONFIG_PMU_ESL
+#endif
+
+#ifndef CONFIG_PMU_EXTERNAL
+#define CONFIG_PMU_EXTERNAL
+#endif
+
+#endif
+#ifndef CONFIG_PMU_VOLT_UP
+#define CONFIG_PMU_VOLT_UP
+#endif
+
+#ifndef CONFIG_CCORE_NOTIFIER
+#define CONFIG_CCORE_NOTIFIER
+#endif
+
+#ifndef CONFIG_RSR_ACC
+#define CONFIG_RSR_ACC
+#endif
+
+#ifndef CONFIG_NRCCPU_PM
+#define CONFIG_NRCCPU_PM
+#endif
+
+#ifndef CONFIG_NRCCPU_PM_DEBUG
+#define CONFIG_NRCCPU_PM_DEBUG
+#endif
+
+#ifndef CONFIG_LRCCPU_PM_DEBUG
+#define CONFIG_LRCCPU_PM_DEBUG
+#endif
+
+#ifndef CONFIG_PM_OM
+#endif
+
+#ifndef CONFIG_PM_OM_NR
+#endif
+
+#ifndef CONFIG_BALONG_CCLK
+#define CONFIG_BALONG_CCLK
+#endif
+
+#ifndef CONFIG_BALONG_CCLK_DEBUG
+#define CONFIG_BALONG_CCLK_DEBUG
+#endif
+
+#ifndef CONFIG_BALONG_CCLK_ATUOGATE
+#define CONFIG_BALONG_CCLK_ATUOGATE
+#endif
+
+#ifndef CONFIG_CLK_FASTBOOT_STACK
+#endif
+
+#ifndef THREE_DFS_CTRL_REG
+#define THREE_DFS_CTRL_REG
+#endif
+
+#ifndef USE_PERI_FIX0_CLK
+#define USE_PERI_FIX0_CLK
+#endif
+
+#ifndef CONFIG_MODULE_HAC_PM
+#define CONFIG_MODULE_HAC_PM
+#endif
+
+#ifndef CONFIG_CCORE_CPU_IDLE
+#define CONFIG_CCORE_CPU_IDLE
+#endif
+
+#ifndef CONFIG_HAC_CPU_IDLE
+#define CONFIG_HAC_CPU_IDLE
+#endif
+
+#ifndef CONFIG_CCORE_PM
+#define CONFIG_CCORE_PM
+#endif
+
+#ifndef CONFIG_MODULE_TIMER
+//quectel
+//#define CONFIG_MODULE_TIMER
+#endif
+
+#ifndef CONFIG_MODULE_HAC_SLICE
+#define CONFIG_MODULE_HAC_SLICE
+#endif
+
+#ifndef CONFIG_SLICE_RESUME_MDM
+#define CONFIG_SLICE_RESUME_MDM
+#endif
+
+#ifndef CONFIG_MODULE_SYNC
+#define CONFIG_MODULE_SYNC
+#endif
+
+#ifndef CONFIG_EXTRA_SLICE_SYNC
+#endif
+
+#ifndef CONFIG_RSRACC_DEBUG
+#define CONFIG_RSRACC_DEBUG
+#endif
+
+#ifndef CONFIG_CCORE_NOTIFIER
+#define CONFIG_CCORE_NOTIFIER
+#endif
+
+#ifndef CONFIG_CCORE_CPU
+#define CONFIG_CCORE_CPU
+#endif
+
+#ifndef CONFIG_HAS_CCORE_WAKELOCK
+#define CONFIG_HAS_CCORE_WAKELOCK
+#endif
+
+#ifndef CONFIG_HAS_HAC_WAKELOCK
+#define CONFIG_HAS_HAC_WAKELOCK
+#endif
+
+#ifndef CONFIG_CCORE_BALONG_PM
+#define CONFIG_CCORE_BALONG_PM
+#endif
+
+#ifndef CONFIG_BALONG_EDMA
+#define CONFIG_BALONG_EDMA
+#endif
+
+#ifndef CONFIG_EDMA_DEBUG
+#define CONFIG_EDMA_DEBUG
+#endif
+
+#ifndef CONFIG_AVS
+#define CONFIG_AVS
+#endif
+
+#ifndef AVS_CCNUM_FREQTYPE
+#define AVS_CCNUM_FREQTYPE
+#endif
+
+#ifndef CONFIG_AVS_TEST
+#endif
+
+#ifndef CONFIG_HWADP
+#define CONFIG_HWADP
+#endif
+
+#ifndef CONFIG_SYSCTRL
+#define CONFIG_SYSCTRL
+#endif
+
+#ifndef CONFIG_GET_SYSTEM_STATUS
+#define CONFIG_GET_SYSTEM_STATUS
+#endif
+
+#ifndef CONFIG_SYSBUS
+#endif
+
+#ifndef CONFIG_SYSBUS_NRCCPU
+#endif
+
+#ifndef CONFIG_SYSBUS_HAC
+#endif
+
+#ifndef CONFIG_BALONG_HPM_TEMP
+#endif
+
+#ifndef CONFIG_MEM
+#define CONFIG_MEM
+#endif
+
+#ifndef CONFIG_BALONG_DPM
+#endif
+
+#ifndef CONFIG_M3PM
+#define CONFIG_M3PM
+#endif
+
+#ifndef CONFIG_M3PM_NRCCPU
+#define CONFIG_M3PM_NRCCPU
+#endif
+
+#ifndef CONFIG_M3PM_TEST
+#endif
+
+#ifndef M3PM_LOG_AP_SHOW
+#define M3PM_LOG_AP_SHOW
+#endif
+
+#ifndef AXIMEM_BAK
+#define AXIMEM_BAK
+#endif
+
+#ifndef CONFIG_LPMCU_PM_DEBUG
+#define CONFIG_LPMCU_PM_DEBUG
+#endif
+
+#ifndef CONFIG_MODULE_BUSSTRESS
+#endif
+
+#ifndef CONFIG_OS_INCLUDE_LP
+#endif
+
+#ifndef CONFIG_PERF_STAT_1
+#define CONFIG_PERF_STAT_1
+#endif
+
+#ifndef CONFIG_PERF_STAT_DEBUG
+#define CONFIG_PERF_STAT_DEBUG
+#endif
+
+#ifndef CONFIG_BALONG_MODEM_RESET_CTRL
+#endif
+
+#ifndef CONFIG_BALONG_MODEM_RESET
+#define CONFIG_BALONG_MODEM_RESET
+#endif
+
+#ifndef DDR_DVFS_SR_9500
+#define DDR_DVFS_SR_9500
+#endif
+
+#ifndef DDR_READ_DMC_STATE
+#define DDR_READ_DMC_STATE
+#endif
+
+#ifndef CONFIG_DDRFREQ
+#define CONFIG_DDRFREQ
+#endif
+
+#ifndef DDR_MAINTENANCE_TEST
+#endif
+
+#ifndef DDR_BUCK6_PWROFF_RETENTION
+#endif
+
+#ifndef CONFIG_BALONG_MODEM_EXTRA_DTS
+#endif
+
+#ifndef MULTI_CORE_BOOT
+#define MULTI_CORE_BOOT
+#endif
+
+#ifndef CONFIG_NXDEP_MPU
+#define CONFIG_NXDEP_MPU
+#endif
+
+#ifndef CONFIG_NXDEP_MPU_NEW
+#define CONFIG_NXDEP_MPU_NEW
+#endif
+
+#ifndef FASTBOOT_RESERVE_DDR
+#define FASTBOOT_RESERVE_DDR
+#endif
+
+#ifndef CONFIG_IPF
+#endif
+
+#ifndef CONFIG_PSAM
+#endif
+
+#ifndef CONFIG_CIPHER
+#endif
+
+#ifndef CONFIG_EIPF
+#define CONFIG_EIPF
+#endif
+
+#ifndef CONFIG_WAN
+#define CONFIG_WAN
+#endif
+
+#ifndef CONFIG_NEW_PLATFORM
+#define CONFIG_NEW_PLATFORM
+#endif
+
+#ifndef CONFIG_CIPHER_NEW
+#define CONFIG_CIPHER_NEW
+#endif
+
+#ifndef CONFIG_CIPHER_EN_DC
+#define CONFIG_CIPHER_EN_DC
+#endif
+
+#ifndef CONFIG_ECIPHER
+#define CONFIG_ECIPHER
+#endif
+
+#ifndef CONFIG_MAA_BALONG
+#define CONFIG_MAA_BALONG
+#endif
+
+#ifndef CONFIG_MAA_LR
+#define CONFIG_MAA_LR
+#endif
+
+#ifndef CONFIG_MAA_NR
+#define CONFIG_MAA_NR
+#endif
+
+#ifndef CONFIG_ESPE
+#define CONFIG_ESPE
+#endif
+
+#ifndef CONFIG_BALONG_ESPE_FW
+#define CONFIG_BALONG_ESPE_FW
+#endif
+
+#ifndef CONFIG_ESPE_DIRECT_FW
+#define CONFIG_ESPE_DIRECT_FW
+#endif
+
+#ifndef CONFIG_BALONG_ESPE_DFS
+#define CONFIG_BALONG_ESPE_DFS
+#endif
+
+#ifndef CONFIG_MAA_LL1C
+#define CONFIG_MAA_LL1C
+#endif
+
+#ifndef CONFIG_AXIMEM_BALONG
+#define CONFIG_AXIMEM_BALONG
+#endif
+
+#ifndef CONFIG_IPF_VESION
+#define CONFIG_IPF_VESION 2
+#endif
+
+#ifndef CONFIG_IPF_ADQ_LEN
+#define CONFIG_IPF_ADQ_LEN 5
+#endif
+
+#ifndef CONFIG_USB_DWC3_VBUS_DISCONNECT
+#define CONFIG_USB_DWC3_VBUS_DISCONNECT
+#endif
+
+#ifndef USB3_SYNOPSYS_PHY
+#endif
+
+#ifndef CONFIG_USB_FORCE_HIGHSPEED
+#define CONFIG_USB_FORCE_HIGHSPEED
+#endif
+
+#ifndef FASTBOOT_ADB
+#define FASTBOOT_ADB
+#endif
+
+#ifndef FASTBOOT_SN_SUPPORT
+#define FASTBOOT_SN_SUPPORT
+#endif
+
+#ifndef CONFIG_DIEID_TRANS_SN
+#define CONFIG_DIEID_TRANS_SN
+#endif
+
+#ifndef CONGIG_XLOADER_USB
+#endif
+
+#ifndef CONFIG_XLOADER_USB_BSN
+#endif
+
+#ifndef CONFIG_BALONG_WETH_DEV
+//#define CONFIG_BALONG_WETH_DEV
+#define CONFIG_BALONG_WETH
+
+#endif
+
+#ifndef CONFIG_VCOM_AGENT
+#endif
+
+#ifndef CONFIG_BALONG_PCIE_CDEV
+#define CONFIG_BALONG_PCIE_CDEV
+#endif
+
+#ifndef CONFIG_PCIE_CDEV_DMA_SINGLE
+#define CONFIG_PCIE_CDEV_DMA_SINGLE
+#endif
+
+#ifndef CONFIG_PCIE_CDEV_DMA_DOUBLE
+#endif
+
+#ifndef CONFIG_PCDEV_BALONG_UDC
+#define CONFIG_PCDEV_BALONG_UDC
+#endif
+
+#ifndef CONFIG_PCDEV_DEBUG
+#endif
+
+#ifndef CONFIG_BALONG_PCIE_ETH_EP
+#endif
+
+#ifndef CONFIG_FBNET_SUPPORT
+#define CONFIG_FBNET_SUPPORT
+#endif
+
+#ifndef FEATURE_HISOCKET
+#define FEATURE_HISOCKET FEATURE_ON
+#endif
+
+#ifndef SPEV200_SUPPORT
+#define SPEV200_SUPPORT
+#endif
+
+#ifndef CONFIG_BALONG_TRANS_REPORT
+#define CONFIG_BALONG_TRANS_REPORT
+#endif
+
+#ifndef ENABLE_TEST_CODE
+#endif
+
+#ifndef CONFIG_DDR_PROTECT
+#define CONFIG_DDR_PROTECT
+#endif
+
+#ifndef CONFIG_INIT_EXPECTED_TZPC
+#define CONFIG_INIT_EXPECTED_TZPC
+#endif
+
+#ifndef CONFIG_EMU_DDR
+#endif
+
+#ifndef CONFIG_TEMP_DDR_FOR_APLUSB
+#endif
+
+#ifndef CONFIG_LLT_MDRV
+#endif
+
+#ifndef CONFIG_ECDC
+#endif
+
+#ifndef CONFIG_DYNMEM_REPORT
+#define CONFIG_DYNMEM_REPORT
+#endif
+
+#ifndef CONFIG_AT_UART
+#define CONFIG_AT_UART
+#endif
+
+#ifndef CONFIG_CSHELL
+#endif
+
+#ifndef CONFIG_NR_CSHELL
+#endif
+
+#ifndef CONFIG_UART_SHELL
+#endif
+
+#ifndef CONFIG_OS_INCLUDE_SHELL
+#define CONFIG_OS_INCLUDE_SHELL
+#endif
+
+#ifndef CONFIG_ICC_DEBUG
+#define CONFIG_ICC_DEBUG
+#endif
+
+#ifndef CONFIG_APLUSB_PCIE_ICC
+#endif
+
+#ifndef APLUSB_ICC_EP_SIDE
+#endif
+
+#ifndef CONFIG_DYNMEM_REPORT
+#define CONFIG_DYNMEM_REPORT
+#endif
+
+#ifndef CONFIG_SEC_ICC
+#define CONFIG_SEC_ICC
+#endif
+
+#ifndef CONFIG_FASTBOOT_UART_NUM
+#define CONFIG_FASTBOOT_UART_NUM 0
+#endif
+
+#ifndef CONFIG_ICC
+#define CONFIG_ICC
+#endif
+
+#ifndef CONFIG_NRICC
+#define CONFIG_NRICC
+#endif
+
+#ifndef CONFIG_EICC_V100
+#define CONFIG_EICC_V100
+#endif
+
+#ifndef CONFIG_EICC_DEBUG
+#define CONFIG_EICC_DEBUG
+#endif
+
+#ifndef CONFIG_SEC_EICC_COREID
+#define CONFIG_SEC_EICC_COREID
+#endif
+
+#ifndef CONFIG_SHELL_SYMBOL_REG
+#endif
+
+#ifndef CONFIG_DFC
+#endif
+
+#ifndef CONFIG_MODULE_IPC
+#define CONFIG_MODULE_IPC
+#endif
+
+#ifndef CONFIG_DDR_MAINTAIN
+#define CONFIG_DDR_MAINTAIN
+#endif
+
+#ifndef EXTRA_MODEM_DDRTEST
+#endif
+
+#ifndef CONFIG_XLOADERSPLIT
+#endif
+
+#ifndef CONFIG_DDR_TEST
+#endif
+
+#ifndef CONFIG_TRUSTZONE
+#define CONFIG_TRUSTZONE
+#endif
+
+#ifndef CONFIG_TRUSTZONE_HM
+#define CONFIG_TRUSTZONE_HM
+#endif
+
+#ifndef CONFIG_BL31
+#define CONFIG_BL31
+#endif
+
+#ifndef NX_VERSION
+#define NX_VERSION b5000
+#endif
+
+#ifndef DRV_XTENSA_CORE
+#define DRV_XTENSA_CORE BB5000_NX
+#endif
+
+#ifndef DRV_XTENSA_SYSTEM
+#define DRV_XTENSA_SYSTEM ($(ROOT_XTENSA_PATH_W) / XtDevTools / install / builds / RH - 2018.5 - linux / (DRV_XTENSA_CORE) / config)
+#endif
+
+#ifndef DRV_XTENSA_BUILD
+#define DRV_XTENSA_BUILD "$(ROOT_XTENSA_PATH_W)/XtDevTools/install/builds/RH-2018.5-linux"
+#endif
+
+#ifndef DRV_XTENSA_TOOLS
+#define DRV_XTENSA_TOOLS "$(ROOT_XTENSA_PATH_W)/XtDevTools/install/tools/RH-2018.5-linux"
+#endif
+
+#ifndef PRODUCT_CFG_PTABLE_VER_NAME
+#define PRODUCT_CFG_PTABLE_VER_NAME "m533"
+#endif
+
+#ifndef PRODUCT_CFG_PTABLE_VER_ID
+#define PRODUCT_CFG_PTABLE_VER_ID "ptable 1.00 "
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_M3BOOT_LEN
+#define PRODUCT_CFG_FLASH_M3BOOT_LEN 0x100000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_PTABLE_LEN
+#define PRODUCT_CFG_FLASH_PTABLE_LEN 0x100000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_FASTBOOT_LEN
+#define PRODUCT_CFG_FLASH_FASTBOOT_LEN 0x200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_NV_FACTORY_LEN
+#define PRODUCT_CFG_FLASH_NV_FACTORY_LEN 0x1400000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_NV_LTE_LEN
+#define PRODUCT_CFG_FLASH_NV_LTE_LEN 0x1400000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_NV_IMG_LEN
+#define PRODUCT_CFG_FLASH_NV_IMG_LEN 0x2E00000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_NV_DLD_LEN
+#define PRODUCT_CFG_FLASH_NV_DLD_LEN 0x1400000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_NV_CUST_LEN
+#define PRODUCT_CFG_FLASH_NV_CUST_LEN 0x100000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_UCE_LEN
+#define PRODUCT_CFG_FLASH_UCE_LEN 0x80000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_MODEM_SECURE_LEN
+#define PRODUCT_CFG_FLASH_MODEM_SECURE_LEN 0x300000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_SEC_STORAGE_LEN
+#define PRODUCT_CFG_FLASH_SEC_STORAGE_LEN 0x600000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_M3IMAGE_LEN
+#define PRODUCT_CFG_FLASH_M3IMAGE_LEN 0x100000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_RECOVERY_LEN
+#define PRODUCT_CFG_FLASH_RECOVERY_LEN 0x400000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_MISC_LEN
+#define PRODUCT_CFG_FLASH_MISC_LEN 0x100000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_DTIMG_LEN
+#define PRODUCT_CFG_FLASH_DTIMG_LEN 0x00800000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_KERNEL_DT_LEN
+#define PRODUCT_CFG_FLASH_KERNEL_DT_LEN 0x00200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_KERNEL_DTCUST_LEN
+#define PRODUCT_CFG_FLASH_KERNEL_DTCUST_LEN 0x00200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_MODEM_DT_LEN
+#define PRODUCT_CFG_FLASH_MODEM_DT_LEN 0x00200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_MODEM_DTCUST_LEN
+#define PRODUCT_CFG_FLASH_MODEM_DTCUST_LEN 0x00200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_TEEOS_LEN
+#define PRODUCT_CFG_FLASH_TEEOS_LEN 0x800000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_BOOTIMG_LEN
+#define PRODUCT_CFG_FLASH_BOOTIMG_LEN 0x1400000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_BOOTIMGBAK_LEN
+#define PRODUCT_CFG_FLASH_BOOTIMGBAK_LEN 0x1400000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_MODEM_FW_LEN
+#define PRODUCT_CFG_FLASH_MODEM_FW_LEN 0x4000000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_YAFFS_ONLINE_LEN
+#define PRODUCT_CFG_FLASH_YAFFS_ONLINE_LEN 0x5A00000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_HIFI_LEN
+#define PRODUCT_CFG_FLASH_HIFI_LEN 0x800000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_OEMINFO_LEN
+#define PRODUCT_CFG_FLASH_OEMINFO_LEN 0x200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_RESERVE1_LEN
+#define PRODUCT_CFG_FLASH_RESERVE1_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_RESERVE2_LEN
+#define PRODUCT_CFG_FLASH_RESERVE2_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_RESERVE3_LEN
+#define PRODUCT_CFG_FLASH_RESERVE3_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_OM_LEN
+#define PRODUCT_CFG_FLASH_OM_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_YAFFS_APP_LEN
+#define PRODUCT_CFG_FLASH_YAFFS_APP_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_YAFFS_WEBUI_LEN
+#define PRODUCT_CFG_FLASH_YAFFS_WEBUI_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_SYSIMG_LEN
+#define PRODUCT_CFG_FLASH_SYSIMG_LEN 0x4000000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_YAFFS_USERDATA_LEN
+#define PRODUCT_CFG_FLASH_YAFFS_USERDATA_LEN 0x8600000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_LOGO_LEN
+#define PRODUCT_CFG_FLASH_LOGO_LEN 0x200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_CACHE_LEN
+#define PRODUCT_CFG_FLASH_CACHE_LEN 0x400000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_MULTI_CARRIER_LEN
+#define PRODUCT_CFG_FLASH_MULTI_CARRIER_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_HAC_IMG_LEN
+#define PRODUCT_CFG_FLASH_HAC_IMG_LEN 0x0
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_ISO_LEN
+#define PRODUCT_CFG_FLASH_ISO_LEN 0x1000000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_TRUSTED_FW_LEN
+#define PRODUCT_CFG_FLASH_TRUSTED_FW_LEN 0x200000
+#endif
+
+#ifndef PRODUCT_CFG_FLASH_UBIUSE_LEN
+#define PRODUCT_CFG_FLASH_UBIUSE_LEN 0x4C00000
+#endif
+
+#ifndef MPU_ASLR_RESERVE
+#define MPU_ASLR_RESERVE 0x100000
+#endif
+
+#ifndef MPU_ALGN_RESERVE
+#define MPU_ALGN_RESERVE 0x100000
+#endif
+
+#ifndef HI_SRAM_MEM_ADDR
+#define HI_SRAM_MEM_ADDR CCPU_LLRAM_BASE_ADDR
+#endif
+
+#ifndef HI_SRAM_SIZE
+#define HI_SRAM_SIZE 0x2000
+#endif
+
+#ifndef DRV_SRAM_ADDR
+#define DRV_SRAM_ADDR (HI_SRAM_MEM_ADDR)
+#endif
+
+#ifndef DRV_SRAM_SIZE
+#define DRV_SRAM_SIZE HI_SRAM_SIZE
+#endif
+
+#ifndef CPHY_SRAM_ADDR
+#define CPHY_SRAM_ADDR ((DRV_SRAM_ADDR) + (DRV_SRAM_SIZE))
+#endif
+
+#ifndef CPHY_SRAM_SIZE
+#define CPHY_SRAM_SIZE 0xA0
+#endif
+
+#ifndef CPHY_LPC_SRAM_ADDR
+#define CPHY_LPC_SRAM_ADDR (CPHY_SRAM_ADDR)
+#endif
+
+#ifndef CPHY_LPC_SRAM_SIZE
+#define CPHY_LPC_SRAM_SIZE 0x38
+#endif
+
+#ifndef CPHY_1X_DATA_MBX_SRAM_ADDR
+#define CPHY_1X_DATA_MBX_SRAM_ADDR ((CPHY_LPC_SRAM_ADDR) + (CPHY_LPC_SRAM_SIZE))
+#endif
+
+#ifndef CPHY_1X_DATA_MBX_SRAM_SIZE
+#define CPHY_1X_DATA_MBX_SRAM_SIZE 0x28
+#endif
+
+#ifndef CPHY_HRPD_DATA_MBX_SRAM_ADDR
+#define CPHY_HRPD_DATA_MBX_SRAM_ADDR ((CPHY_1X_DATA_MBX_SRAM_ADDR) + (CPHY_1X_DATA_MBX_SRAM_SIZE))
+#endif
+
+#ifndef CPHY_HRPD_DATA_MBX_SRAM_SIZE
+#define CPHY_HRPD_DATA_MBX_SRAM_SIZE 0x40
+#endif
+
+#ifndef GPHY_SRAM_ADDR
+#define GPHY_SRAM_ADDR ((CPHY_SRAM_ADDR) + (CPHY_SRAM_SIZE))
+#endif
+
+#ifndef HI_NRSRAM_MEM_ADDR
+#define HI_NRSRAM_MEM_ADDR NRCCPU_LLRAM_BASE_ADDR
+#endif
+
+#ifndef HI_NRSRAM_SIZE
+#define HI_NRSRAM_SIZE NRCCPU_SRAM_SIZE
+#endif
+
+#ifndef DRV_NRSRAM_ADDR
+#define DRV_NRSRAM_ADDR (HI_NRSRAM_MEM_ADDR)
+#endif
+
+#ifndef DRV_NRSRAM_SIZE
+#define DRV_NRSRAM_SIZE 0x2000
+#endif
+
+#ifndef LPMCU_DRAM_WINDOW
+#define LPMCU_DRAM_WINDOW 0x20000000
+#endif
+
+#ifndef DDR_MEM_ADDR
+#define DDR_MEM_ADDR 0x00000000
+#endif
+
+#ifndef DDR_MEM_SIZE
+#define DDR_MEM_SIZE 0x40000000
+#endif
+
+#ifndef DDR_APP_ACP_ADDR
+#define DDR_APP_ACP_ADDR 0
+#endif
+
+#ifndef DDR_APP_ACP_SIZE
+#define DDR_APP_ACP_SIZE 0
+#endif
+
+#ifndef DDR_MDM_ACP_ADDR
+#define DDR_MDM_ACP_ADDR 0
+#endif
+
+#ifndef DDR_MDM_ACP_SIZE
+#define DDR_MDM_ACP_SIZE 0
+#endif
+
+#ifndef DDR_FASTBOOT_SIZE
+#define DDR_FASTBOOT_SIZE 0x400000
+#endif
+
+#ifndef DDR_SECURE_OS_SIZE
+#define DDR_SECURE_OS_SIZE 0xE00000
+#endif
+
+#ifndef DDR_BL31_IMAGE_SIZE
+#define DDR_BL31_IMAGE_SIZE 0x200000
+#endif
+
+#ifndef DDR_BL31_RESERVED_SIZE
+#define DDR_BL31_RESERVED_SIZE 0x200000
+#endif
+
+#ifndef DDR_TLPHY_IMAGE_SIZE
+#define DDR_TLPHY_IMAGE_SIZE 0x800000
+#endif
+
+#ifndef DDR_NRPHY_IMAGE_SIZE
+#define DDR_NRPHY_IMAGE_SIZE 0x1000000
+#endif
+
+#ifndef DDR_MCORE_SIZE
+#define DDR_MCORE_SIZE 0x9A00000
+#endif
+
+#ifndef DDR_MCORE_NR_SIZE
+#define DDR_MCORE_NR_SIZE 0x2F00000
+#endif
+
+#ifndef DDR_MCORE_DTS_SIZE
+#define DDR_MCORE_DTS_SIZE 0x180000
+#endif
+
+#ifndef DDR_GU_SIZE
+#define DDR_GU_SIZE 0x40000
+#endif
+
+#ifndef DDR_LPHY_SDR_SIZE
+#define DDR_LPHY_SDR_SIZE 0x1080000
+#endif
+
+#ifndef DDR_LCS_SIZE
+#define DDR_LCS_SIZE 0x280000
+#endif
+
+#ifndef DDR_SDR_NR_SIZE
+#define DDR_SDR_NR_SIZE 0x1F00000
+#endif
+
+#ifndef DDR_HIFI_SIZE
+#define DDR_HIFI_SIZE 0xA00000
+#endif
+
+#ifndef DDR_HARQ_UP_SIZE
+#define DDR_HARQ_UP_SIZE 0x100000
+#endif
+
+#ifndef DDR_RFIC_SUB6G_IMAGE_SIZE
+#define DDR_RFIC_SUB6G_IMAGE_SIZE 0x138000
+#endif
+
+#ifndef DDR_RFIC_HF_IMAGE_SIZE
+#define DDR_RFIC_HF_IMAGE_SIZE 0x0c8000
+#endif
+
+#ifndef DDR_RFIC_DUMP_SIZE
+#define DDR_RFIC_DUMP_SIZE 0x100000
+#endif
+
+#ifndef DDR_SEC_SHARED_SIZE
+#define DDR_SEC_SHARED_SIZE 0x100000
+#endif
+
+#ifndef DDR_RESERVED_SIZE
+#define DDR_RESERVED_SIZE 0x00000
+#endif
+
+#ifndef DDR_SHA_NV_SIZE
+#define DDR_SHA_NV_SIZE 0xBB0000
+#endif
+
+#ifndef DDR_SHA_NR_PM_SIZE
+#define DDR_SHA_NR_PM_SIZE 0x100000
+#endif
+
+#ifndef DDR_SHA_HAC_PM_SIZE
+#define DDR_SHA_HAC_PM_SIZE 0x100000
+#endif
+
+#ifndef DDR_SHA_SEC_ICC_SIZE
+#define DDR_SHA_SEC_ICC_SIZE 0x50000
+#endif
+
+#ifndef DDR_SHA_MEM_SIZE
+#define DDR_SHA_MEM_SIZE 0x240000
+#endif
+
+#ifndef DDR_SHARED_MEM_SIZE
+#define DDR_SHARED_MEM_SIZE ((DDR_SHA_NV_SIZE) + (DDR_SHA_MEM_SIZE) + (DDR_SHA_SEC_ICC_SIZE) + (DDR_SHA_NR_PM_SIZE) + (DDR_SHA_HAC_PM_SIZE))
+#endif
+
+#ifndef DDR_MCORE_NR_SHARED_MEM_SIZE
+#define DDR_MCORE_NR_SHARED_MEM_SIZE 0x100000
+#endif
+
+#ifndef DDR_MNTN_SIZE
+#define DDR_MNTN_SIZE 0x300000
+#endif
+
+#ifndef DDR_PDE_IMAGE_SIZE
+#define DDR_PDE_IMAGE_SIZE 0x300000
+#endif
+
+#ifndef DDR_HARQ_NRUL_SIZE
+#define DDR_HARQ_NRUL_SIZE 0x500000
+#endif
+
+#ifndef DDR_LTEV_SDR_SIZE
+#define DDR_LTEV_SDR_SIZE 0x800000
+#endif
+
+#ifndef DDR_LTEV_IMAGE_SIZE
+#define DDR_LTEV_IMAGE_SIZE 0x000000
+#endif
+
+#ifndef DDR_CBBE_IMAGE_SIZE
+#define DDR_CBBE_IMAGE_SIZE 0x400000
+#endif
+
+#ifndef DDR_ACORE_SIZE
+#define DDR_ACORE_SIZE 0x1B000000
+#endif
+
+#ifndef DDR_ACORE_DTS_SIZE
+#define DDR_ACORE_DTS_SIZE 0x100000
+#endif
+
+#ifndef DDR_SOCP_SIZE
+#define DDR_SOCP_SIZE 0x8000000
+#endif
+
+#ifndef DDR_FULLSTACK_MEM_SIZE
+#define DDR_FULLSTACK_MEM_SIZE 0x500000
+#endif
+
+#ifndef DDR_FASTBOOT_RESERVE_SIZE
+#define DDR_FASTBOOT_RESERVE_SIZE 0x1400000
+#endif
+
+#ifndef DDR_LPMCU_IMAGE_SIZE
+#define DDR_LPMCU_IMAGE_SIZE 0x40000
+#endif
+
+#ifndef DDR_EMU_HAC_LOAD_SIZE
+#define DDR_EMU_HAC_LOAD_SIZE 0x280000
+#endif
+
+#ifndef DDR_MTD_MEM_SIZE
+#define DDR_MTD_MEM_SIZE 0x4000000
+#endif
+
+#ifndef DDR_MCORE_UNCACHE_SIZE
+#define DDR_MCORE_UNCACHE_SIZE 0x3900000
+#endif
+
+#ifndef DDR_MCORE_NR_UNCACHE_SIZE
+#define DDR_MCORE_NR_UNCACHE_SIZE 0x00400000
+#endif
+
+#ifndef DDR_FASTBOOT_CACHE_SIZE
+#define DDR_FASTBOOT_CACHE_SIZE 0x300000
+#endif
+
+#ifndef DDR_FASTBOOT_UNCACHE_SIZE
+#define DDR_FASTBOOT_UNCACHE_SIZE 0x100000
+#endif
+
+#ifndef DDR_FASTBOOT_CACHE_ADDR
+#define DDR_FASTBOOT_CACHE_ADDR ((DDR_MEM_ADDR))
+#endif
+
+#ifndef DDR_FASTBOOT_UNCACHE_ADDR
+#define DDR_FASTBOOT_UNCACHE_ADDR ((DDR_FASTBOOT_CACHE_ADDR) + (DDR_FASTBOOT_CACHE_SIZE))
+#endif
+
+#ifndef DDR_FASTBOOT_ADDR
+#define DDR_FASTBOOT_ADDR ((DDR_MEM_ADDR))
+#endif
+
+#ifndef DDR_SECURE_OS_ADDR
+#define DDR_SECURE_OS_ADDR ((DDR_FASTBOOT_ADDR) + (DDR_FASTBOOT_SIZE))
+#endif
+
+#ifndef DDR_BL31_IMAGE_ADDR
+#define DDR_BL31_IMAGE_ADDR ((DDR_SECURE_OS_ADDR) + (DDR_SECURE_OS_SIZE))
+#endif
+
+#ifndef DDR_BL31_RESERVED_ADDR
+#define DDR_BL31_RESERVED_ADDR ((DDR_BL31_IMAGE_ADDR) + (DDR_BL31_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_TLPHY_IMAGE_ADDR
+#define DDR_TLPHY_IMAGE_ADDR ((DDR_BL31_RESERVED_ADDR) + (DDR_BL31_RESERVED_SIZE))
+#endif
+
+#ifndef DDR_NRPHY_IMAGE_ADDR
+#define DDR_NRPHY_IMAGE_ADDR ((DDR_TLPHY_IMAGE_ADDR) + (DDR_TLPHY_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_MCORE_ADDR
+#define DDR_MCORE_ADDR ((DDR_NRPHY_IMAGE_ADDR) + (DDR_NRPHY_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_MCORE_NR_ADDR
+#define DDR_MCORE_NR_ADDR ((DDR_MCORE_ADDR) + (DDR_MCORE_SIZE))
+#endif
+
+#ifndef DDR_MCORE_DTS_ADDR
+#define DDR_MCORE_DTS_ADDR ((DDR_MCORE_NR_ADDR) + (DDR_MCORE_NR_SIZE))
+#endif
+
+#ifndef DDR_GU_ADDR
+#define DDR_GU_ADDR ((DDR_MCORE_DTS_ADDR) + (DDR_MCORE_DTS_SIZE))
+#endif
+
+#ifndef DDR_LPHY_SDR_ADDR
+#define DDR_LPHY_SDR_ADDR ((DDR_GU_ADDR) + (DDR_GU_SIZE))
+#endif
+
+#ifndef DDR_LCS_ADDR
+#define DDR_LCS_ADDR ((DDR_LPHY_SDR_ADDR) + (DDR_LPHY_SDR_SIZE))
+#endif
+
+#ifndef DDR_SDR_NR_ADDR
+#define DDR_SDR_NR_ADDR ((DDR_LCS_ADDR) + (DDR_LCS_SIZE))
+#endif
+
+#ifndef DDR_HIFI_ADDR
+#define DDR_HIFI_ADDR ((DDR_SDR_NR_ADDR) + (DDR_SDR_NR_SIZE))
+#endif
+
+#ifndef DDR_HARQ_UP_ADDR
+#define DDR_HARQ_UP_ADDR ((DDR_HIFI_ADDR) + (DDR_HIFI_SIZE))
+#endif
+
+#ifndef DDR_RFIC_SUB6G_IMAGE_ADDR
+#define DDR_RFIC_SUB6G_IMAGE_ADDR ((DDR_HARQ_UP_ADDR) + (DDR_HARQ_UP_SIZE))
+#endif
+
+#ifndef DDR_RFIC_HF_IMAGE_ADDR
+#define DDR_RFIC_HF_IMAGE_ADDR ((DDR_RFIC_SUB6G_IMAGE_ADDR) + (DDR_RFIC_SUB6G_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_RFIC_DUMP_ADDR
+#define DDR_RFIC_DUMP_ADDR ((DDR_RFIC_HF_IMAGE_ADDR) + (DDR_RFIC_HF_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_SEC_SHARED_ADDR
+#define DDR_SEC_SHARED_ADDR ((DDR_RFIC_DUMP_ADDR) + (DDR_RFIC_DUMP_SIZE))
+#endif
+
+#ifndef DDR_RESERVED_ADDR
+#define DDR_RESERVED_ADDR ((DDR_SEC_SHARED_ADDR) + (DDR_SEC_SHARED_SIZE))
+#endif
+
+#ifndef DDR_SHARED_MEM_ADDR
+#define DDR_SHARED_MEM_ADDR ((DDR_RESERVED_ADDR) + (DDR_RESERVED_SIZE))
+#endif
+
+#ifndef DDR_SHAREDNR_MEM_ADDR
+#define DDR_SHAREDNR_MEM_ADDR ((DDR_SHARED_MEM_ADDR) + (DDR_SHARED_MEM_SIZE))
+#endif
+
+#ifndef DDR_MNTN_ADDR
+#define DDR_MNTN_ADDR ((DDR_SHAREDNR_MEM_ADDR) + (DDR_MCORE_NR_SHARED_MEM_SIZE))
+#endif
+
+#ifndef DDR_PDE_IMAGE_ADDR
+#define DDR_PDE_IMAGE_ADDR ((DDR_MNTN_ADDR) + (DDR_MNTN_SIZE))
+#endif
+
+#ifndef DDR_HARQ_NRUL_ADDR
+#define DDR_HARQ_NRUL_ADDR ((DDR_PDE_IMAGE_ADDR) + (DDR_PDE_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_LTEV_SDR_ADDR
+#define DDR_LTEV_SDR_ADDR ((DDR_HARQ_NRUL_ADDR) + (DDR_HARQ_NRUL_SIZE))
+#endif
+
+#ifndef DDR_LTEV_IMAGE_ADDR
+#define DDR_LTEV_IMAGE_ADDR ((DDR_LTEV_SDR_ADDR) + (DDR_LTEV_SDR_SIZE))
+#endif
+
+#ifndef DDR_CBBE_IMAGE_ADDR
+#define DDR_CBBE_IMAGE_ADDR ((DDR_LTEV_IMAGE_ADDR) + (DDR_LTEV_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_ACORE_ADDR
+#define DDR_ACORE_ADDR ((DDR_CBBE_IMAGE_ADDR) + (DDR_CBBE_IMAGE_SIZE))
+#endif
+
+#ifndef DDR_ACORE_DTS_ADDR
+#define DDR_ACORE_DTS_ADDR ((DDR_ACORE_ADDR) + (DDR_ACORE_SIZE))
+#endif
+
+#ifndef DDR_DTB_OVL_SIZE
+#define DDR_DTB_OVL_SIZE 0x2000
+#endif
+
+#ifndef DDR_ACORE_DTBO_SIZE
+#define DDR_ACORE_DTBO_SIZE ((DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_ACORE_DTBO_ADDR
+#define DDR_ACORE_DTBO_ADDR ((DDR_ACORE_DTS_ADDR) + (DDR_ACORE_DTS_SIZE) - (DDR_ACORE_DTBO_SIZE))
+#endif
+
+#ifndef DDR_SOCP_ADDR
+#define DDR_SOCP_ADDR ((DDR_ACORE_DTS_ADDR) + (DDR_ACORE_DTS_SIZE))
+#endif
+
+#ifndef DDR_FASTBOOT_RESERVE_ADDR
+#define DDR_FASTBOOT_RESERVE_ADDR ((DDR_ACORE_ADDR) + (DDR_ACORE_SIZE) - (DDR_FASTBOOT_RESERVE_SIZE))
+#endif
+
+#ifndef DDR_EMU_HAC_LOAD_ADDR
+#define DDR_EMU_HAC_LOAD_ADDR ((DDR_SOCP_ADDR) + (DDR_SOCP_SIZE))
+#endif
+
+#ifndef DDR_MTD_MEM_ADDR
+#define DDR_MTD_MEM_ADDR ((DDR_EMU_HAC_LOAD_ADDR) + (DDR_EMU_HAC_LOAD_SIZE))
+#endif
+
+#ifndef DDR_FULLSTACK_MEM_ADDR
+#define DDR_FULLSTACK_MEM_ADDR ((DDR_MTD_MEM_ADDR) + (DDR_MTD_MEM_SIZE))
+#endif
+
+#ifndef DDR_LPMCU_IMAGE_ADDR
+#define DDR_LPMCU_IMAGE_ADDR ((DDR_FULLSTACK_MEM_ADDR) + (DDR_FULLSTACK_MEM_SIZE))
+#endif
+
+#ifndef CONFIG_MBB_SEPARATE_KERNEL_DT
+#define CONFIG_MBB_SEPARATE_KERNEL_DT
+#endif
+
+#ifndef CONFIG_ENABLE_DTO
+#define CONFIG_ENABLE_DTO
+#endif
+
+#ifndef DDR_LRCCPU_DTS_SIZE
+#define DDR_LRCCPU_DTS_SIZE 0x60000
+#endif
+
+#ifndef DDR_LPMCU_DTS_SIZE
+#define DDR_LPMCU_DTS_SIZE 0x60000
+#endif
+
+#ifndef DDR_NRCCPU_DTS_SIZE
+#define DDR_NRCCPU_DTS_SIZE 0x60000
+#endif
+
+#ifndef DDR_L2CPU_DTS_SIZE
+#define DDR_L2CPU_DTS_SIZE 0x60000
+#endif
+
+#ifndef DDR_MDTS_TOTAL_SIZE
+#define DDR_MDTS_TOTAL_SIZE ((DDR_LRCCPU_DTS_SIZE) + (DDR_LPMCU_DTS_SIZE) + (DDR_NRCCPU_DTS_SIZE) + (DDR_L2CPU_DTS_SIZE))
+#endif
+
+#ifndef DDR_LRCCPU_DTS_ADDR
+#define DDR_LRCCPU_DTS_ADDR ((DDR_MCORE_DTS_ADDR))
+#endif
+
+#ifndef DDR_LPMCU_DTS_ADDR
+#define DDR_LPMCU_DTS_ADDR ((DDR_LRCCPU_DTS_ADDR) + (DDR_LRCCPU_DTS_SIZE))
+#endif
+
+#ifndef DDR_NRCCPU_DTS_ADDR
+#define DDR_NRCCPU_DTS_ADDR ((DDR_LPMCU_DTS_ADDR) + (DDR_LPMCU_DTS_SIZE))
+#endif
+
+#ifndef DDR_L2CPU_DTS_ADDR
+#define DDR_L2CPU_DTS_ADDR ((DDR_NRCCPU_DTS_ADDR) + (DDR_NRCCPU_DTS_SIZE))
+#endif
+
+#ifndef DDR_LRCCPU_DTBO_SIZE
+#define DDR_LRCCPU_DTBO_SIZE ((DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_LPMCU_DTBO_SIZE
+#define DDR_LPMCU_DTBO_SIZE ((DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_NRCCPU_DTBO_SIZE
+#define DDR_NRCCPU_DTBO_SIZE ((DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_L2CPU_DTBO_SIZE
+#define DDR_L2CPU_DTBO_SIZE ((DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_LRCCPU_DTBO_ADDR
+#define DDR_LRCCPU_DTBO_ADDR ((DDR_LRCCPU_DTS_ADDR) + (DDR_LRCCPU_DTS_SIZE) - (DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_LPMCU_DTBO_ADDR
+#define DDR_LPMCU_DTBO_ADDR ((DDR_LPMCU_DTS_ADDR) + (DDR_LPMCU_DTS_SIZE) - (DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_NRCCPU_DTBO_ADDR
+#define DDR_NRCCPU_DTBO_ADDR ((DDR_NRCCPU_DTS_ADDR) + (DDR_NRCCPU_DTS_SIZE) - (DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef DDR_L2CPU_DTBO_ADDR
+#define DDR_L2CPU_DTBO_ADDR ((DDR_L2CPU_DTS_ADDR) + (DDR_L2CPU_DTS_SIZE) - (DDR_DTB_OVL_SIZE))
+#endif
+
+#ifndef MEM_ADJUST_INTERCEPT
+#define MEM_ADJUST_INTERCEPT
+#endif
+
+#ifndef MCORE_TEXT_START_ADDR
+#define MCORE_TEXT_START_ADDR ((DDR_MCORE_ADDR))
+#endif
+
+#ifndef FASTBOOT_DDR_ENTRY
+#define FASTBOOT_DDR_ENTRY ((DDR_FASTBOOT_ADDR))
+#endif
+
+#ifndef PRODUCT_CFG_KERNEL_ENTRY
+#define PRODUCT_CFG_KERNEL_ENTRY ((DDR_ACORE_ADDR) + 0x80000 - 0x8000)
+#endif
+
+#ifndef PRODUCT_KERNEL_PARAMS_PHYS
+#define PRODUCT_KERNEL_PARAMS_PHYS ((DDR_ACORE_ADDR) + 0x100)
+#endif
+
+#ifndef ONCHIP_FASTBOOT_ADDR
+#define ONCHIP_FASTBOOT_ADDR ((MCORE_TEXT_START_ADDR) + 0x100000 - 0x1000)
+#endif
+
+#ifndef DDR_MCORE_UNCACHE_ADDR
+#define DDR_MCORE_UNCACHE_ADDR ((DDR_MCORE_ADDR) + (DDR_MCORE_SIZE) - (DDR_MCORE_UNCACHE_SIZE))
+#endif
+
+#ifndef DDR_MCORE_NR_UNCACHE_ADDR
+#define DDR_MCORE_NR_UNCACHE_ADDR ((DDR_MCORE_NR_ADDR) + (DDR_MCORE_NR_SIZE) - (DDR_MCORE_NR_UNCACHE_SIZE))
+#endif
+
+#ifndef MODEM_SANITIZER_ADDR_OFFSET
+#define MODEM_SANITIZER_ADDR_OFFSET 0
+#endif
+
+#ifndef MODEM_SANITIZER_NR_ADDR_OFFSET
+#define MODEM_SANITIZER_NR_ADDR_OFFSET 0
+#endif
+
+#ifndef MDM_SANTIZIER_MEM_SIZE
+#define MDM_SANTIZIER_MEM_SIZE 0
+#endif
+
+#ifndef MDM_SANTIZIER_NR_MEM_SIZE
+#define MDM_SANTIZIER_NR_MEM_SIZE 0
+#endif
+
+#ifndef MDM_SANTIZIER_MEM_ADDR
+#define MDM_SANTIZIER_MEM_ADDR 0
+#endif
+
+#ifndef MDM_SANTIZIER_NR_MEM_ADDR
+#define MDM_SANTIZIER_NR_MEM_ADDR 0
+#endif
+
+#ifndef DDR_UPA_ADDR
+#define DDR_UPA_ADDR DDR_GU_ADDR
+#endif
+
+#ifndef DDR_UPA_SIZE
+#define DDR_UPA_SIZE 0x00024000
+#endif
+
+#ifndef DDR_CQI_ADDR
+#define DDR_CQI_ADDR ((DDR_UPA_ADDR) + (DDR_UPA_SIZE))
+#endif
+
+#ifndef DDR_CQI_SIZE
+#define DDR_CQI_SIZE 0x00003400
+#endif
+
+#ifndef DDR_ZSP_UP_ADDR
+#define DDR_ZSP_UP_ADDR ((DDR_CQI_ADDR) + (DDR_CQI_SIZE))
+#endif
+
+#ifndef DDR_ZSP_UP_SIZE
+#define DDR_ZSP_UP_SIZE 0x00008000
+#endif
+
+#ifndef DDR_ZSP_UP_1_ADDR
+#define DDR_ZSP_UP_1_ADDR ((DDR_ZSP_UP_ADDR) + (DDR_ZSP_UP_SIZE))
+#endif
+
+#ifndef DDR_ZSP_UP_1_SIZE
+#define DDR_ZSP_UP_1_SIZE 0x00008000
+#endif
+
+#ifndef SHM_SEC_SIZE
+#define SHM_SEC_SIZE (DDR_SEC_SHARED_SIZE)
+#endif
+
+#ifndef SHM_SIZE_PROTECT_BARRIER
+#define SHM_SIZE_PROTECT_BARRIER (0x1000)
+#endif
+
+#ifndef SHM_SIZE_PARAM_CFG
+#define SHM_SIZE_PARAM_CFG (0x4000)
+#endif
+
+#ifndef SHM_SIZE_SEC_ICC
+#define SHM_SIZE_SEC_ICC (0x20000)
+#endif
+
+#ifndef SHM_SIZE_SEC_RESERVED
+#define SHM_SIZE_SEC_RESERVED (0xb000)
+#endif
+
+#ifndef SHM_SIZE_SEC_MDMA9_PM_BOOT
+#define SHM_SIZE_SEC_MDMA9_PM_BOOT (0x2000)
+#endif
+
+#ifndef SHM_SIZE_SEC_CERT
+#define SHM_SIZE_SEC_CERT (0)
+#endif
+
+#ifndef SHM_SIZE_SEC_DUMP
+#define SHM_SIZE_SEC_DUMP (0x24000)
+#endif
+
+#ifndef SHM_SIZE_SEC_MALLOC
+#define SHM_SIZE_SEC_MALLOC (0x80000)
+#endif
+
+#ifndef SHM_SIZE_SEC_EICC_COREID
+#define SHM_SIZE_SEC_EICC_COREID (0x40)
+#endif
+
+#ifndef DDR_HIFI_MBX_ADDR
+#define DDR_HIFI_MBX_ADDR ((DDR_SHARED_MEM_ADDR) + (DDR_SHA_NV_SIZE) + (DDR_SHA_SEC_ICC_SIZE) + (DDR_SHA_NR_PM_SIZE) + (DDR_SHA_HAC_PM_SIZE))
+#endif
+
+#ifndef DDR_HIFI_MBX_SIZE
+#define DDR_HIFI_MBX_SIZE (0X9800)
+#endif
+
+#ifndef NV_MBN_MAX_SIZE
+#define NV_MBN_MAX_SIZE 0x20000
+#endif
+
+#ifndef NV_DDR_SIZE
+#define NV_DDR_SIZE (DDR_SHA_NV_SIZE)
+#endif
+
+#ifndef SHA_SEC_ICC_DDR_SIZE
+#define SHA_SEC_ICC_DDR_SIZE (DDR_SHA_SEC_ICC_SIZE)
+#endif
+
+#ifndef NR_PM_DDR_SIZE
+#define NR_PM_DDR_SIZE (DDR_SHA_NR_PM_SIZE)
+#endif
+
+#ifndef HAC_PM_DDR_SIZE
+#define HAC_PM_DDR_SIZE (DDR_SHA_HAC_PM_SIZE)
+#endif
+
+#ifndef NV_COMM_BIN_FILE_MAX_SIZE
+#define NV_COMM_BIN_FILE_MAX_SIZE 0xA08C00
+#endif
+
+#ifndef SHM_SIZE_HIFI_MBX
+#define SHM_SIZE_HIFI_MBX (DDR_HIFI_MBX_SIZE)
+#endif
+
+#ifndef SHM_SIZE_HIFI
+#define SHM_SIZE_HIFI (10 * 1024)
+#endif
+
+#ifndef SHM_SIZE_TLPHY
+#define SHM_SIZE_TLPHY (12 * 1024)
+#endif
+
+#ifndef SHM_SIZE_TEMPERATURE
+#define SHM_SIZE_TEMPERATURE (3 * 1024)
+#endif
+
+#ifndef SHM_SIZE_DDM_LOAD
+#define SHM_SIZE_DDM_LOAD (1 * 1024)
+#endif
+
+#ifndef SHM_SIZE_MEM_APPA9_PM_BOOT
+#define SHM_SIZE_MEM_APPA9_PM_BOOT (0x10000)
+#endif
+
+#ifndef SHM_SIZE_MEM_MDMA9_PM_BOOT
+#define SHM_SIZE_MEM_MDMA9_PM_BOOT (0x2000)
+#endif
+
+#ifndef SHM_SIZE_TENCILICA_MULT_BAND
+#define SHM_SIZE_TENCILICA_MULT_BAND (0x8000)
+#endif
+
+#ifndef SHM_SIZE_ICC
+#define SHM_SIZE_ICC (0x79800)
+#endif
+
+#ifndef SHM_SIZE_IPF
+#define SHM_SIZE_IPF (0x10000)
+#endif
+
+#ifndef SHM_SIZE_PSAM
+#define SHM_SIZE_PSAM (0)
+#endif
+
+#ifndef SHM_SIZE_WAN
+#define SHM_SIZE_WAN (0x8000)
+#endif
+
+#ifndef SHM_SIZE_NV_UNSAFE
+#define SHM_SIZE_NV_UNSAFE (0x400)
+#endif
+
+#ifndef SHM_SIZE_NV
+#define SHM_SIZE_NV (NV_DDR_SIZE)
+#endif
+
+#ifndef SHM_SIZE_SHA_SEC_ICC
+#define SHM_SIZE_SHA_SEC_ICC (SHA_SEC_ICC_DDR_SIZE)
+#endif
+
+#ifndef SHM_SIZE_NR_PM
+#define SHM_SIZE_NR_PM (NR_PM_DDR_SIZE)
+#endif
+
+#ifndef SHM_SIZE_HAC_PM
+#define SHM_SIZE_HAC_PM (HAC_PM_DDR_SIZE)
+#endif
+
+#ifndef SHM_SIZE_M3_MNTN
+#define SHM_SIZE_M3_MNTN (0x20000)
+#endif
+
+#ifndef SHM_SIZE_TIMESTAMP
+#define SHM_SIZE_TIMESTAMP (1 * 1024)
+#endif
+
+#ifndef SHM_SIZE_IOS
+#define SHM_SIZE_IOS (6 * 1024)
+#endif
+
+#ifndef SHM_SIZE_RESTORE_AXI
+#define SHM_SIZE_RESTORE_AXI (96 * 1024)
+#endif
+
+#ifndef SHM_SIZE_PMU
+#define SHM_SIZE_PMU (3 * 1024)
+#endif
+
+#ifndef SHM_SIZE_PTABLE
+#define SHM_SIZE_PTABLE (2 * 1024)
+#endif
+
+#ifndef SHM_SIZE_CCORE_RESET
+#define SHM_SIZE_CCORE_RESET (0x400)
+#endif
+
+#ifndef SHM_SIZE_PM_OM
+#define SHM_SIZE_PM_OM (256 * 1024)
+#endif
+
+#ifndef SHM_SIZE_M3PM
+#define SHM_SIZE_M3PM (0x1000)
+#endif
+
+#ifndef SHM_SIZE_SLICE_MEM
+#define SHM_SIZE_SLICE_MEM (0x1000)
+#endif
+
+#ifndef SHM_SIZE_OSA_LOG
+#define SHM_SIZE_OSA_LOG (1024)
+#endif
+
+#ifndef SHM_SIZE_WAS_LOG
+#define SHM_SIZE_WAS_LOG (1024)
+#endif
+
+#ifndef SHM_SIZE_SRAM_BAK
+#define SHM_SIZE_SRAM_BAK (HI_SRAM_SIZE)
+#endif
+
+#ifndef SHM_SIZE_SRAM_TO_DDR
+#define SHM_SIZE_SRAM_TO_DDR (HI_SRAM_SIZE)
+#endif
+
+#ifndef SHM_SIZE_M3RSRACC_BD
+#define SHM_SIZE_M3RSRACC_BD (1024)
+#endif
+
+#ifndef SHM_SIZE_AXI_MEM
+#define SHM_SIZE_AXI_MEM (0x40000)
+#endif
+
+#ifndef SHM_SIZE_LLRAM_PM
+#define SHM_SIZE_LLRAM_PM (0x50000)
+#endif
+
+#ifndef SHM_SIZE_SIM_MEMORY
+#define SHM_SIZE_SIM_MEMORY (256 * 1024)
+#endif
+
+#ifndef SHM_SIZE_PRODUCT_MEM
+#define SHM_SIZE_PRODUCT_MEM (2 * 1024)
+#endif
+
+#ifndef NRSHM_SIZE_ICC
+#define NRSHM_SIZE_ICC (0xC0000)
+#endif
+
+#ifndef FEATURE_NV_PARTRION_MULTIPLEX
+#define FEATURE_NV_PARTRION_MULTIPLEX FEATURE_ON
+#endif
+
+#ifndef CPUFREQ_DEBUG_INTERFACE
+#define CPUFREQ_DEBUG_INTERFACE
+#endif
+
+#ifndef CONFIG_PM_OM_DEBUG
+#endif
+
+#ifndef CONFIG_TSENSOR_PRINT_TEMP
+#define CONFIG_TSENSOR_PRINT_TEMP
+#endif
+
+#ifndef AXIMEM_BASE_ADDR
+#define AXIMEM_BASE_ADDR (0xe6fc0000)
+#endif
+
+#ifndef AXIMEM_MAX_LEN
+#define AXIMEM_MAX_LEN (256 * 1024)
+#endif
+
+#ifndef AXIMEM_CACHE_MAX_LEN
+#define AXIMEM_CACHE_MAX_LEN (4 * 1024)
+#endif
+
+#ifndef AXIMEM_UNCACHE_MAX_LEN
+#define AXIMEM_UNCACHE_MAX_LEN (AXIMEM_MAX_LEN - AXIMEM_CACHE_MAX_LEN)
+#endif
+
+#ifndef LINUX_KERNEL
+#define LINUX_KERNEL "kernel-4.14"
+#endif
+
+#ifndef DDR_MODEM_NSRO_SHARE_MEM_ADDR
+#define DDR_MODEM_NSRO_SHARE_MEM_ADDR (DDR_SHARED_MEM_ADDR)
+#endif
+
+#ifndef DDR_MODEM_NSRO_SHARE_MEM_SIZE
+#define DDR_MODEM_NSRO_SHARE_MEM_SIZE ((DDR_SHA_NV_SIZE) + (DDR_SHA_SEC_ICC_SIZE) + (DDR_SHA_NR_PM_SIZE) + (DDR_SHA_HAC_PM_SIZE))
+#endif
+
+#ifndef DDR_MODEM_SHARE_MEM_ADDR
+#define DDR_MODEM_SHARE_MEM_ADDR ((DDR_MODEM_NSRO_SHARE_MEM_ADDR) + (DDR_MODEM_NSRO_SHARE_MEM_SIZE))
+#endif
+
+#ifndef DDR_MODEM_SHARE_MEM_SIZE
+#define DDR_MODEM_SHARE_MEM_SIZE (DDR_SHA_MEM_SIZE)
+#endif
+
+#ifndef EXTRA_MODEM_DDRTEST
+#endif
+
+#endif /*__PRODUCT_CONFIG_H__*/

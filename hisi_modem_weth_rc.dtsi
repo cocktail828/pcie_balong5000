@@ -1,0 +1,12 @@
+/*
+ * Hisilicon Ltd Balong SOC
+ */
+
+/include/ "skeleton.dtsi"
+
+/{
+	weth_hal_app0:weth_hal@E00000ff {
+		compatible = "hisilicon,weth_rc";
+		status = "ok";
+	};
+};

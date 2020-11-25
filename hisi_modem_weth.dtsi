@@ -1,0 +1,183 @@
+/*
+ * Hisilicon Ltd Balong SOC
+ */
+
+/include/ "skeleton.dtsi"
+
+/{
+	weth_app0:rmnet0@E0000000 {
+		compatible = "hisilicon,rmnet0";
+		nic_name = "rmnet0";
+		dev_id = <0>;
+		status = "ok";
+	};
+	
+	weth_app1:rmnet1@E0000001 {
+		compatible = "hisilicon,rmnet1";
+		nic_name = "rmnet1";
+		dev_id = <1>;
+		status = "ok";
+	};
+	
+	weth_app2:rmnet2@E0000002 {
+		compatible = "hisilicon,rmnet2";
+		nic_name = "rmnet2";
+		dev_id = <2>;
+		status = "ok";
+	};
+	
+	weth_app3:rmnet3@E0000003 {
+		compatible = "hisilicon,rmnet3";
+		nic_name = "rmnet3";
+		dev_id = <3>;
+		status = "ok";
+	};
+	
+	weth_app4:rmnet4@E0000004 {
+		compatible = "hisilicon,rmnet4";
+		nic_name = "rmnet4";
+		dev_id = <4>;
+		status = "ok";
+	};
+	
+	weth_app5:rmnet5@E0000005 {
+		compatible = "hisilicon,rmnet5";
+		nic_name = "rmnet5";
+		dev_id = <5>;
+		status = "ok";
+	};
+	
+	weth_app6:rmnet6@E0000006 {
+		compatible = "hisilicon,rmnet6";
+		nic_name = "rmnet6";
+		dev_id = <6>;
+		status = "ok";
+	};
+	
+	weth_app7:rmnet_ims00@E0000007 {
+		compatible = "hisilicon,rmnet_ims00";
+		nic_name = "rmnet_ims00";
+		dev_id = <7>;
+		status = "ok";
+	};
+	
+	weth_app8:rmnet_ims10@E0000008 {
+		compatible = "hisilicon,rmnet_ims10";
+		nic_name = "rmnet_ims10";
+		dev_id = <8>;
+		status = "ok";
+	};
+	
+	weth_app9:rmnet_emc0@E0000009 {
+		compatible = "hisilicon,rmnet_emc0";
+		nic_name = "rmnet_emc0";
+		dev_id = <9>;
+		status = "ok";
+	};
+	
+	weth_app10:rmnet_emc1@E000000a {
+		compatible = "hisilicon,rmnet_emc1";
+		nic_name = "rmnet_emc1";
+		dev_id = <10>;
+		status = "ok";
+	};
+	
+	weth_app11:rmnet_r_ims00@E000000b {
+		compatible = "hisilicon,rmnet_r_ims00";
+		nic_name = "rmnet_r_ims00";
+		dev_id = <11>;
+		status = "ok";
+	};
+	
+	weth_app12:rmnet_r_ims01@E000000c {
+		compatible = "hisilicon,rmnet_r_ims01";
+		nic_name = "rmnet_r_ims01";
+		dev_id = <12>;
+		status = "ok";
+	};
+	
+	weth_app13:rmnet_r_ims10@E000000d {
+		compatible = "hisilicon,rmnet_r_ims10";
+		nic_name = "rmnet_r_ims10";
+		dev_id = <13>;
+		status = "ok";
+	};
+	
+	weth_app14:rmnet_r_ims11@E000000e {
+		compatible = "hisilicon,rmnet_r_ims11";
+		nic_name = "rmnet_r_ims11";
+		dev_id = <14>;
+		status = "ok";
+	};
+	
+	weth_app15:rmnet_tun00@E000000f {
+		compatible = "hisilicon,rmnet_tun00";
+		nic_name = "rmnet_tun00";
+		dev_id = <15>;
+		status = "ok";
+	};
+
+	weth_app16:rmnet_tun01@E0000010 {
+		compatible = "hisilicon,rmnet_tun01";
+		nic_name = "rmnet_tun01";
+		dev_id = <16>;
+		status = "ok";
+	};
+	
+	weth_app17:rmnet_tun02@E0000011 {
+		compatible = "hisilicon,rmnet_tun02";
+		nic_name = "rmnet_tun02";
+		dev_id = <17>;
+		status = "ok";
+	};
+	
+	weth_app18:rmnet_tun00@E0000012 {
+		compatible = "hisilicon,rmnet_tun03";
+		nic_name = "rmnet_tun03";
+		dev_id = <18>;
+		status = "ok";
+	};
+	
+	weth_app19:rmnet_tun04@E00000013 {
+		compatible = "hisilicon,rmnet_tun04";
+		nic_name = "rmnet_tun04";
+		dev_id = <19>;
+		status = "ok";
+	};
+	
+	weth_app20:rmnet_tun10@E0000014 {
+		compatible = "hisilicon,rmnet_tun10";
+		nic_name = "rmnet_tun10";
+		dev_id = <20>;
+		status = "ok";
+	};
+	
+	weth_app21:rmnet_tun11@E00000015 {
+		compatible = "hisilicon,rmnet_tun11";
+		nic_name = "rmnet_tun11";
+		dev_id = <21>;
+		status = "ok";
+	};
+	
+	weth_app22:rmnet_tun12@E00000016 {
+		compatible = "hisilicon,rmnet_tun12";
+		nic_name = "rmnet_tun12";
+		dev_id = <22>;
+		status = "ok";
+	};
+	
+	weth_app23:rmnet_tun13@E0000017 {
+		compatible = "hisilicon,rmnet_tun13";
+		nic_name = "rmnet_tun13";
+		dev_id = <23>;
+		status = "ok";
+	};
+	
+	weth_app24:rmnet_tun14@E0000008 {
+		compatible = "hisilicon,rmnet_tun14";
+		nic_name = "rmnet_tun14";
+		dev_id = <24>;
+		status = "ok";
+	};
+		
+};

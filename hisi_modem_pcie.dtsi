@@ -1,0 +1,23 @@
+/*
+ * Hisilicon Ltd Balong SOC
+ */
+
+/include/ "skeleton.dtsi"
+
+/{
+    pcie_balong_5000 {
+		compatible = "hisilicon,pcie_balong_5000";
+		/* vendor id, device id*/
+		pcie_id_attr = <0x19E5>, <0x5000>;
+		/* pcie port channel id*/		
+		pcie_port_id = <0>;
+		/* pcie ep dma bar offset */
+		pcie_dma_bar_offset = <0x20000>;
+		/* pcie pm rc side gpio definition */
+		ep_wake_rc_gpio_id = <265>;
+		ep_status_gpio_id = <241>;
+		rc_wake_ep_gpio_id = <43>;
+		rc_status_gpio_id = <266>;
+		status = "ok";
+	};
+};
